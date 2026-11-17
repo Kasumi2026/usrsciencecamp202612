@@ -1,0 +1,3216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>臺師大USR國中小自然科學實驗營隊｜報名查詢・現場報到・餐飲核銷系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .tab-active {
+      background-color: #1e3a8a;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+    }
+    .tab-inactive {
+      background-color: #ffffff;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+    .tab-inactive:hover {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up {
+      animation: fadeSlideUp 0.25s ease-out forwards;
+    }
+    @keyframes rowHighlight {
+      0% { background-color: #fef08a; }
+      100% { background-color: transparent; }
+    }
+    .row-flash {
+      animation: rowHighlight 1.8s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- 頂部導覽列 -->
+  <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-2xl shrink-0">
+          🔬
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight">臺師大USR國中小自然科學實驗營隊</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-medium">
+              115/12/25–12/26
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 mt-0.5">報名狀態查詢・活動當日點名・餐別/餐食選擇核銷系統</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+        <span id="sync-status-badge" class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-white/10 text-blue-100 border border-white/15">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          正在連線 Google Sheet (gid=101988920)...
+        </span>
+        <button id="btn-header-sync" type="button" onclick="syncFromGoogleSheet()" class="px-3 py-2 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/35 text-xs font-semibold text-emerald-100 border border-emerald-400/30 transition flex items-center gap-1.5">
+          <span id="header-sync-icon">🔄</span>
+          <span id="header-sync-text">立即更新資料</span>
+        </button>
+        <button type="button" onclick="openSheetSettingsShortcut()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-medium text-white border border-white/15 transition flex items-center gap-1.5">
+          <span>⚙️</span>
+          <span>連線與寫回設定</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 全域訊息通知 Toast -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- 主內容區 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- 四大功能主分頁導覽 -->
+    <nav class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-6" aria-label="主要功能選單">
+      <button id="tab-lookup" type="button" onclick="switchMainTab('lookup')" class="tab-active px-4 py-3.5 rounded-2xl font-semibold text-sm transition flex items-center justify-center gap-2">
+        <span>🔍</span>
+        <span>1. 報名狀態查詢</span>
+      </button>
+      <button id="tab-checkin" type="button" onclick="switchMainTab('checkin')" class="tab-inactive px-4 py-3.5 rounded-2xl font-semibold text-sm transition flex items-center justify-center gap-2">
+        <span>✅</span>
+        <span>2. 活動當天點名報到</span>
+      </button>
+      <button id="tab-meals" type="button" onclick="switchMainTab('meals')" class="tab-inactive px-4 py-3.5 rounded-2xl font-semibold text-sm transition flex items-center justify-center gap-2">
+        <span>🔒</span>
+        <span>3. 餐飲查詢與領餐核銷</span>
+      </button>
+      <button id="tab-sheet" type="button" onclick="switchMainTab('sheet')" class="tab-inactive px-4 py-3.5 rounded-2xl font-semibold text-sm transition flex items-center justify-center gap-2">
+        <span>🔒</span>
+        <span>4. Google Sheet 資料總覽</span>
+      </button>
+    </nav>
+
+    <!-- =====================================================================
+         分頁 1：報名狀態查詢（學生/家長個人查詢專區 & 各校查詢專區）
+         ===================================================================== -->
+    <section id="panel-lookup" class="space-y-6 animate-fade-up">
+      <!-- 子分頁切換 -->
+      <div class="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm inline-flex flex-wrap gap-2">
+        <button id="btn-mode-student" type="button" onclick="switchLookupMode('student')" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white shadow-sm transition">
+          👨‍👩‍👧‍👦 學生/家長個人查詢專區
+        </button>
+        <button id="btn-mode-school" type="button" onclick="switchLookupMode('school')" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          🏫 各校查詢專區
+        </button>
+      </div>
+
+      <!-- 專區 A：學生/家長個人查詢專區 -->
+      <div id="view-student-lookup" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <div class="max-w-2xl">
+          <h2 class="text-xl font-bold text-slate-900">學生/家長個人查詢專區</h2>
+          <p class="text-sm text-slate-500 mt-1">請輸入就讀學校、學生姓名與家長(監護人)手機末 4 碼，即可檢視並修正個人報名資料，亦可查看錄取結果與兩日報到、領餐進度。</p>
+        </div>
+
+        <form id="student-lookup-form" onsubmit="handleStudentLookup(event)" class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">就讀學校</label>
+            <input id="student-school-select" type="text" required placeholder="請輸入就讀學校名稱（例如：竹圍國小）" class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">學生姓名</label>
+            <input id="student-name-input" type="text" required placeholder="例如：王曉明" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">家長(監護人)手機末 4 碼</label>
+            <input id="student-verify-input" type="text" required maxlength="4" inputmode="numeric" placeholder="例如：0921" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div class="md:col-span-4 flex flex-wrap items-center gap-3 pt-1">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition">
+              立即查詢報名狀態
+            </button>
+            <button type="button" onclick="resetStudentLookup()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm transition">
+              清除重填
+            </button>
+          </div>
+        </form>
+
+        <!-- 個人查詢結果呈現區 -->
+        <div id="student-lookup-result" class="mt-6 hidden"></div>
+      </div>
+
+      <!-- 專區 B：各校查詢專區 -->
+      <div id="view-school-lookup" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 hidden">
+        <div class="max-w-2xl">
+          <h2 class="text-xl font-bold text-slate-900">各校查詢專區</h2>
+          <p class="text-sm text-slate-500 mt-1">供各校校長、主任或承辦教師輸入「教育部 6 碼學校代碼」，查詢貴校學生報名清冊（含報名失敗原因）、修正資料，並下載姓名保護版或完整版 Excel。</p>
+        </div>
+
+        <form id="school-lookup-form" onsubmit="handleSchoolLookup(event)" class="mt-6 flex flex-col sm:flex-row gap-3 max-w-xl">
+          <div class="flex-1">
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">教育部 6 碼學校代碼</label>
+            <input id="school-code-input" type="text" required maxlength="6" placeholder="例如：000000" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm uppercase tracking-wider focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div class="sm:self-end">
+            <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+              查詢全校名單
+            </button>
+          </div>
+        </form>
+
+        <!-- 各校清冊呈現區 -->
+        <div id="school-lookup-result" class="mt-6 hidden"></div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         分頁 2：活動當天點名報到（自助報到 & 工作人員報到戰情室）
+         ===================================================================== -->
+    <section id="panel-checkin" class="space-y-6 hidden animate-fade-up">
+      <!-- 活動場次日期切換器 -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">📅</span>
+          <div>
+            <div class="text-xs font-semibold text-slate-500">目前作業場次日期（與各校查詢、餐飲核銷、Google Sheet 總覽即時連動）</div>
+            <div class="text-sm font-bold text-slate-900" id="active-day-label">12/25（五）第一天營隊</div>
+          </div>
+        </div>
+        <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 self-start sm:self-auto">
+          <button id="day-btn-d1" type="button" onclick="switchActiveDay('d1')" class="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm transition">
+            12/25（五）第一天
+          </button>
+          <button id="day-btn-d2" type="button" onclick="switchActiveDay('d2')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">
+            12/26（六）第二天
+          </button>
+        </div>
+      </div>
+
+      <!-- 子視圖切換 -->
+      <div class="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm inline-flex flex-wrap gap-2">
+        <button id="btn-sub-self" type="button" onclick="switchCheckinSubView('self')" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 text-white shadow-sm transition">
+          📱 自助報到
+        </button>
+        <button id="btn-sub-staff" type="button" onclick="switchCheckinSubView('staff')" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          🔒 工作人員報到戰情室
+        </button>
+      </div>
+
+      <!-- 子視圖 A：自助報到 -->
+      <div id="subview-self-checkin" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <div class="max-w-2xl">
+          <h2 class="text-xl font-bold text-slate-900">自助報到</h2>
+          <p class="text-sm text-slate-500 mt-1">請選擇就讀學校、年級並輸入學生姓名完成現場簽到；簽到完成後將立即顯示當日餐別/餐食選擇憑證。</p>
+        </div>
+
+        <form id="self-checkin-form" onsubmit="handleSelfCheckin(event)" class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">就讀學校</label>
+            <select id="ci-school" required class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+              <option value="">請選擇就讀學校...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">年級</label>
+            <select id="ci-grade" required class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+              <option value="">請選擇年級...</option>
+              <option value="國小一年級">國小一年級</option>
+              <option value="國小二年級">國小二年級</option>
+              <option value="國小三年級">國小三年級</option>
+              <option value="國小四年級">國小四年級</option>
+              <option value="國小五年級">國小五年級</option>
+              <option value="國小六年級">國小六年級</option>
+              <option value="國中一年級">國中一年級</option>
+              <option value="國中二年級">國中二年級</option>
+              <option value="國中三年級">國中三年級</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">學生姓名</label>
+            <input id="ci-name" type="text" required placeholder="例如：王曉明" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" />
+          </div>
+          <div class="md:col-span-3 flex flex-wrap items-center gap-3 pt-1">
+            <button type="submit" class="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition">
+              ✅ 確認完成線上簽到
+            </button>
+            <button type="button" onclick="resetSelfCheckinForm()" class="px-4 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm transition">
+              重設表單
+            </button>
+          </div>
+        </form>
+
+        <!-- 自助報到即時回饋卡片 -->
+        <div id="ci-feedback" class="mt-6 hidden"></div>
+      </div>
+
+      <!-- 子視圖 B：工作人員報到戰情室（需密碼 12251226） -->
+      <div id="subview-staff-dashboard" class="hidden space-y-6">
+        <!-- 密碼鎖定畫面 -->
+        <div id="staff-lock-screen" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 max-w-md mx-auto text-center">
+          <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl mx-auto mb-4">
+            🔐
+          </div>
+          <h3 class="text-lg font-bold text-slate-900">工作人員報到戰情室已鎖定</h3>
+          <p class="text-xs text-slate-500 mt-1">請輸入工作人員管理密碼以檢視全體報到率與執行現場手動點名。</p>
+          <form onsubmit="unlockStaffDashboard(event)" class="mt-5 space-y-3 text-left">
+            <div class="relative">
+              <input id="staff-pwd-input" type="password" required placeholder="請輸入管理密碼" class="w-full px-4 py-3 pr-11 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+              <button type="button" onclick="togglePasswordVisibility('staff-pwd-input')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+                👁️
+              </button>
+            </div>
+            <p id="staff-pwd-error" class="text-xs text-rose-600 font-medium hidden">密碼錯誤，請重新輸入。</p>
+            <button type="submit" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition">
+              解鎖進入戰情室
+            </button>
+          </form>
+        </div>
+
+        <!-- 解鎖後戰情室主畫面 -->
+        <div id="staff-unlocked-content" class="hidden space-y-6">
+          <!-- KPI 統計列 -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <div class="text-xs font-semibold text-slate-500">應到總人數（報名成功）</div>
+              <div id="kpi-expected" class="text-2xl font-bold text-slate-900 mt-1">0</div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm">
+              <div class="text-xs font-semibold text-emerald-600">已報到人數</div>
+              <div id="kpi-checked-in" class="text-2xl font-bold text-emerald-700 mt-1">0</div>
+            </div>
+            <button type="button" onclick="openUnarrivedListModal()" title="點擊檢視尚未報到名單與監護人連絡電話" class="text-left bg-white hover:bg-amber-50/70 p-5 rounded-2xl border-2 border-amber-300 hover:border-amber-500 shadow-sm hover:shadow-md transition cursor-pointer group focus:outline-none focus:ring-2 focus:ring-amber-400">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-xs font-semibold text-amber-700">尚未報到人數</span>
+                <span class="text-[11px] font-bold text-amber-700 bg-amber-100 group-hover:bg-amber-200 px-2 py-0.5 rounded-full transition">📋 檢視名單 ↗</span>
+              </div>
+              <div class="mt-1 flex items-baseline justify-between">
+                <span id="kpi-unarrived" class="text-2xl font-bold text-amber-700 underline decoration-amber-400 decoration-2 underline-offset-4">0</span>
+                <span class="text-[11px] text-amber-600/90 font-medium">點擊查電話</span>
+              </div>
+            </button>
+            <div class="bg-white p-5 rounded-2xl border border-blue-200 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-blue-600">即時報到率</span>
+                <span id="kpi-rate-text" class="text-sm font-bold text-blue-700">0%</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mt-3">
+                <div id="kpi-rate-bar" class="h-full bg-blue-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 篩選與操作工具列 -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-5 border-b border-slate-100">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">工作人員點名清冊</h3>
+                <p class="text-xs text-slate-500 mt-0.5">排序規則：少數學校優先 → 學校代碼順序 → 國小至國中各年級 → 班級與座號（未填座號置於該班最後）</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 self-start lg:self-auto">
+                <button type="button" onclick="syncFromGoogleSheet()" class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold transition flex items-center gap-1.5">
+                  <span>🔄</span>
+                  <span>立即更新名單</span>
+                </button>
+                <button type="button" onclick="lockStaffDashboard()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+                  🔒 鎖定戰情室
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+              <select id="dash-filter-school" onchange="renderStaffDashboard()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="ALL">全部就讀學校</option>
+              </select>
+              <select id="dash-filter-status" onchange="renderStaffDashboard()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="ALL">全部報到狀態</option>
+                <option value="UNARRIVED">尚未報到</option>
+                <option value="ARRIVED">已完成報到</option>
+              </select>
+              <input id="dash-search-input" type="text" oninput="renderStaffDashboard()" placeholder="搜尋學生姓名或年級..." class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div class="overflow-x-auto mt-5 rounded-2xl border border-slate-200">
+              <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
+                  <tr>
+                    <th class="px-4 py-3 text-left">序</th>
+                    <th class="px-4 py-3 text-left">就讀學校</th>
+                    <th class="px-4 py-3 text-left">年級／班級</th>
+                    <th class="px-4 py-3 text-left">學生姓名</th>
+                    <th class="px-4 py-3 text-left">餐別/餐食選擇</th>
+                    <th class="px-4 py-3 text-left">報到狀態</th>
+                    <th class="px-4 py-3 text-right">現場點名操作</th>
+                  </tr>
+                </thead>
+                <tbody id="staff-roster-tbody" class="divide-y divide-slate-100 bg-white"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         分頁 3：餐飲查詢與領餐核銷（需密碼 12251226）
+         ===================================================================== -->
+    <section id="panel-meals" class="space-y-6 hidden animate-fade-up">
+      <!-- 密碼鎖定畫面 -->
+      <div id="meals-lock-screen" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 max-w-md mx-auto text-center">
+        <div class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center text-2xl mx-auto mb-4">
+          🍱
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">餐飲查詢與領餐核銷已鎖定</h3>
+        <p class="text-xs text-slate-500 mt-1">請輸入工作人員管理密碼以檢視各餐別統計與執行現場領餐核銷。</p>
+        <form onsubmit="unlockMealsPanel(event)" class="mt-5 space-y-3 text-left">
+          <div class="relative">
+            <input id="meals-pwd-input" type="password" required placeholder="請輸入管理密碼" class="w-full px-4 py-3 pr-11 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
+            <button type="button" onclick="togglePasswordVisibility('meals-pwd-input')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+              👁️
+            </button>
+          </div>
+          <p id="meals-pwd-error" class="text-xs text-rose-600 font-medium hidden">密碼錯誤，請重新輸入。</p>
+          <button type="submit" class="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition">
+            解鎖進入餐飲核銷
+          </button>
+        </form>
+      </div>
+
+      <!-- 解鎖後餐飲查詢與領餐核銷內容 -->
+      <div id="meals-unlocked-content" class="hidden space-y-6">
+        <!-- 場次日期同步提示 -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">🍱</span>
+            <div>
+              <div class="text-xs font-semibold text-slate-500">目前領餐核銷場次</div>
+              <div class="text-sm font-bold text-slate-900" id="meals-day-label">12/25（五）第一天營隊午餐</div>
+            </div>
+          </div>
+          <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 self-start sm:self-auto">
+            <button id="meal-day-btn-d1" type="button" onclick="switchActiveDay('d1')" class="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm transition">
+              12/25（五）第一天
+            </button>
+            <button id="meal-day-btn-d2" type="button" onclick="switchActiveDay('d2')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">
+              12/26（六）第二天
+            </button>
+          </div>
+        </div>
+
+        <!-- 餐別統計 KPI（葷食、素食皆可點擊檢視未領取名單） -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button type="button" onclick="openUnpickedMealModal('葷')" title="點擊檢視葷食便當未領取名單" class="text-left bg-white hover:bg-orange-50/70 p-5 rounded-2xl border-2 border-orange-300 hover:border-orange-500 shadow-sm hover:shadow-md transition cursor-pointer group focus:outline-none focus:ring-2 focus:ring-orange-400">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-orange-700">🍗 葷食便當（已領 / 當日已報到）</span>
+              <span id="meal-meat-total-note" class="text-xs text-slate-400">全體錄取預訂：0 份</span>
+            </div>
+            <div class="mt-2 flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-2">
+                <span id="meal-meat-picked" class="text-2xl font-bold text-orange-700">0</span>
+                <span class="text-xs text-slate-500">/ <span id="meal-meat-arrived">0</span> 份</span>
+              </div>
+              <span id="meal-meat-unpicked-badge" class="text-[11px] font-bold text-orange-800 bg-orange-100 group-hover:bg-orange-200 px-2.5 py-1 rounded-full transition">
+                未領 0 份・檢視名單 ↗
+              </span>
+            </div>
+          </button>
+
+          <button type="button" onclick="openUnpickedMealModal('素')" title="點擊檢視素食便當未領取名單" class="text-left bg-white hover:bg-emerald-50/70 p-5 rounded-2xl border-2 border-emerald-300 hover:border-emerald-500 shadow-sm hover:shadow-md transition cursor-pointer group focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-emerald-700">🥬 素食便當（已領 / 當日已報到）</span>
+              <span id="meal-veg-total-note" class="text-xs text-slate-400">全體錄取預訂：0 份</span>
+            </div>
+            <div class="mt-2 flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-2">
+                <span id="meal-veg-picked" class="text-2xl font-bold text-emerald-700">0</span>
+                <span class="text-xs text-slate-500">/ <span id="meal-veg-arrived">0</span> 份</span>
+              </div>
+              <span id="meal-veg-unpicked-badge" class="text-[11px] font-bold text-emerald-800 bg-emerald-100 group-hover:bg-emerald-200 px-2.5 py-1 rounded-full transition">
+                未領 0 份・檢視名單 ↗
+              </span>
+            </div>
+          </button>
+
+          <div class="bg-white p-5 rounded-2xl border border-blue-200 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-700">📊 當日已報到學員總領餐率</span>
+              <span id="meal-overall-pct" class="text-sm font-bold text-blue-700">0%</span>
+            </div>
+            <div class="mt-2 flex items-baseline gap-2">
+              <span id="meal-all-picked" class="text-2xl font-bold text-slate-900">0</span>
+              <span class="text-xs text-slate-500">/ <span id="meal-all-arrived">0</span> 人已領餐</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 領餐篩選與卡片清單 -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">當日已報到學員領餐核銷區</h3>
+              <p class="text-xs text-slate-500 mt-0.5">系統自動連動「活動當天點名報到」，僅列出當日已完成報到之學員供餐飲組核銷領餐（點擊上方葷／素卡片可快速查看未領取名單）。</p>
+            </div>
+            <button type="button" onclick="lockMealsPanel()" class="self-start sm:self-auto px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition shrink-0">
+              🔒 鎖定餐飲核銷
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+            <select id="meal-filter-school" onchange="renderMealsPanel()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="ALL">全部就讀學校</option>
+            </select>
+            <select id="meal-filter-type" onchange="renderMealsPanel()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="ALL">全部餐別/餐食選擇</option>
+              <option value="葷">🍗 葷食</option>
+              <option value="素">🥬 素食</option>
+            </select>
+            <select id="meal-filter-status" onchange="renderMealsPanel()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="ALL">全部領餐狀態</option>
+              <option value="UNPICKED">⏳ 尚未領取便當</option>
+              <option value="PICKED">✅ 已完成領餐</option>
+            </select>
+            <input id="meal-search-input" type="text" oninput="renderMealsPanel()" placeholder="搜尋學生姓名或班級..." class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <div id="meal-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         分頁 4：Google Sheet 資料總覽（需密碼 12251226）
+         ===================================================================== -->
+    <section id="panel-sheet" class="space-y-6 hidden animate-fade-up">
+      <!-- 密碼鎖定畫面（不提供密碼提示） -->
+      <div id="sheet-lock-screen" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 max-w-md mx-auto text-center">
+        <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-2xl mx-auto mb-4">
+          📊
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">Google Sheet 資料總覽已鎖定</h3>
+        <p class="text-xs text-slate-500 mt-1">請輸入工作人員管理密碼以檢視完整報名資料、審核狀態、兩天報到與領餐紀錄及雙向寫回設定。</p>
+        <form onsubmit="unlockSheetPanel(event)" class="mt-5 space-y-3 text-left">
+          <div class="relative">
+            <input id="sheet-pwd-input" type="password" required placeholder="請輸入管理密碼" class="w-full px-4 py-3 pr-11 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+            <button type="button" onclick="togglePasswordVisibility('sheet-pwd-input')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+              👁️
+            </button>
+          </div>
+          <p id="sheet-pwd-error" class="text-xs text-rose-600 font-medium hidden">密碼錯誤，請重新輸入。</p>
+          <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
+            解鎖進入資料總覽
+          </button>
+        </form>
+      </div>
+
+      <!-- 解鎖後 Google Sheet 資料總覽內容 -->
+      <div id="sheet-unlocked-content" class="hidden space-y-6">
+        <!-- 報名狀態統計 + 兩天報到領餐總覽看板 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- 卡片 1：全體報名審核統計 -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs font-bold text-slate-500">📋 Google Sheet 報名資料總覽</div>
+            <div class="mt-2 flex items-baseline gap-2">
+              <span id="sheet-stat-total" class="text-2xl font-bold text-slate-900">0</span>
+              <span class="text-xs text-slate-500">筆報名紀錄</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">✅ 成功：<span id="sheet-stat-ok">0</span></span>
+              <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">⚠️ 審核中：<span id="sheet-stat-pending">0</span></span>
+              <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200">❌ 失敗：<span id="sheet-stat-fail">0</span></span>
+            </div>
+          </div>
+
+          <!-- 卡片 2：12/25（五）第一天報到與領餐 -->
+          <div class="bg-white p-5 rounded-2xl border border-blue-200 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-700">📅 12/25（五）第一天報到・領餐</span>
+              <span id="sheet-d1-rate" class="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">報到率 0%</span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
+              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-slate-500">已報到人數</div>
+                <div class="text-base font-bold text-slate-900 mt-0.5"><span id="sheet-d1-ci">0</span> <span class="text-xs font-normal text-slate-400">/ <span id="sheet-d1-exp">0</span></span></div>
+              </div>
+              <div class="p-2.5 rounded-xl bg-orange-50/60 border border-orange-100">
+                <div class="text-orange-700">已領餐份數</div>
+                <div class="text-base font-bold text-orange-800 mt-0.5"><span id="sheet-d1-meal">0</span> <span class="text-xs font-normal text-orange-600" id="sheet-d1-meal-detail">(葷0/素0)</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 卡片 3：12/26（六）第二天報到與領餐 -->
+          <div class="bg-white p-5 rounded-2xl border border-indigo-200 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-700">📅 12/26（六）第二天報到・領餐</span>
+              <span id="sheet-d2-rate" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">報到率 0%</span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
+              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-slate-500">已報到人數</div>
+                <div class="text-base font-bold text-slate-900 mt-0.5"><span id="sheet-d2-ci">0</span> <span class="text-xs font-normal text-slate-400">/ <span id="sheet-d2-exp">0</span></span></div>
+              </div>
+              <div class="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
+                <div class="text-emerald-700">已領餐份數</div>
+                <div class="text-base font-bold text-emerald-800 mt-0.5"><span id="sheet-d2-meal">0</span> <span class="text-xs font-normal text-emerald-600" id="sheet-d2-meal-detail">(葷0/素0)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Apps Script 雙向寫回設定抽屜 -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 flex flex-wrap items-center justify-between gap-3 bg-slate-50/80 border-b border-slate-200">
+            <div class="flex items-center gap-2.5">
+              <span class="text-lg">🔗</span>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Google Apps Script 強制雙向寫回設定（已永久綁定）</h3>
+                <p class="text-xs text-slate-500">所有資料修正、狀態變更與兩日報到領餐核銷皆會自動回寫至試算表 gid=101988920</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="toggleAppsScriptDrawer()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold transition">
+                ⚙️ 展開 / 收合設定與 Code.gs
+              </button>
+              <button type="button" onclick="lockSheetPanel()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
+                🔒 鎖定總覽
+              </button>
+            </div>
+          </div>
+
+          <div id="apps-script-drawer" class="hidden p-6 space-y-5">
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-slate-700">目前綁定之 Google Apps Script 網頁應用程式網址（/exec）</label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input id="apps-script-url-input" type="url" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-mono bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                <button type="button" onclick="saveAppsScriptUrl()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shrink-0">
+                  儲存網址
+                </button>
+                <button type="button" onclick="resetDefaultAppsScriptUrl()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition shrink-0">
+                  恢復內建強制網址
+                </button>
+                <button type="button" onclick="testAppsScriptConnection()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition shrink-0">
+                  🧪 測試雙向連線
+                </button>
+              </div>
+            </div>
+
+            <!-- 欄位雙向對應檢查表 -->
+            <div class="rounded-2xl border border-slate-200 overflow-hidden">
+              <div class="bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 border-b border-slate-200">
+                📑 修改資料與 Google Sheet（gid=101988920）欄位雙向對應檢查表
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-xs">
+                  <thead class="bg-white text-slate-500">
+                    <tr>
+                      <th class="px-3 py-2 text-left">系統統一欄位名稱</th>
+                      <th class="px-3 py-2 text-left">對應 Google Sheet 欄位（自動依標題與原讀取欄位寫回）</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <tr><td class="px-3 py-2 font-semibold">1. 學生姓名</td><td class="px-3 py-2">D 欄（標題含「學生姓名／學員姓名／姓名」）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">2. 學生生日</td><td class="px-3 py-2">F 欄（標題含「學生生日／出生年月日」或第 1 個日期型態欄）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">3. 學生身份證字號</td><td class="px-3 py-2">E 欄（標題含「學生身分證／學生身份證」或第 1 個身分證欄）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">4. 家長(監護人)姓名</td><td class="px-3 py-2">G 欄（標題含「監護人姓名／家長姓名／監護人／家長」）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">5. 家長(監護人)生日</td><td class="px-3 py-2">I 欄（標題含「監護人生日／家長生日」或第 2 個日期型態欄）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">6. 家長(監護人)身份證字號</td><td class="px-3 py-2">H 欄（標題含「監護人身分證／家長身份證」或第 2 個身分證欄）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">7. 家長(監護人)手機</td><td class="px-3 py-2">J 欄（標題含「手機／聯絡電話／電話」）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">8. 餐別/餐食選擇</td><td class="px-3 py-2">L 欄（標題含「學生用餐／午餐／餐飲／葷素／素食」）</td></tr>
+                    <tr><td class="px-3 py-2 font-semibold">9. 班級（含就讀學校／座號）</td><td class="px-3 py-2">K 欄（若為「就讀學校/班級/座號」合併欄自動組合寫回；若有獨立學校、年級、班級、座號欄則分別寫入）</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 可複製的 Code.gs 程式碼 -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700">Google Apps Script 完整雙向寫回程式碼（Code.gs）</span>
+                <button type="button" onclick="copyAppsScriptCode()" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+                  📋 複製 Code.gs 程式碼
+                </button>
+              </div>
+              <pre id="apps-script-code-box" class="p-4 rounded-2xl bg-slate-900 text-slate-100 text-[11px] leading-relaxed overflow-x-auto max-h-64 font-mono"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 資料總覽篩選與表格 -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">全體報名資料與兩日報到／領餐即時總表</h3>
+              <p class="text-xs text-slate-500 mt-0.5">可直接點擊表格中的「12/25 報到」、「12/25 領餐」、「12/26 報到」、「12/26 領餐」標籤切換狀態，或點擊「狀態／修正」同步寫回 Google Sheet。</p>
+            </div>
+            <button type="button" onclick="syncFromGoogleSheet()" class="self-start sm:self-auto px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold transition">
+              🔄 從 Google Sheet 重新同步
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+            <select id="sheet-filter-reg" onchange="renderSheetTable()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">全部報名狀態</option>
+              <option value="成功">✅ 報名成功</option>
+              <option value="審核中">⚠️ 審核中</option>
+              <option value="失敗">❌ 報名失敗</option>
+            </select>
+            <select id="sheet-filter-daystatus" onchange="renderSheetTable()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">全部兩日報到／領餐狀態</option>
+              <option value="D1_ARRIVED">12/25 已報到</option>
+              <option value="D1_UNARRIVED">12/25 未報到</option>
+              <option value="D1_MEAL_PICKED">12/25 已領餐</option>
+              <option value="D1_MEAL_UNPICKED">12/25 已報到未領餐</option>
+              <option value="D2_ARRIVED">12/26 已報到</option>
+              <option value="D2_UNARRIVED">12/26 未報到</option>
+              <option value="D2_MEAL_PICKED">12/26 已領餐</option>
+              <option value="D2_MEAL_UNPICKED">12/26 已報到未領餐</option>
+            </select>
+            <select id="sheet-filter-school" onchange="renderSheetTable()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">全部就讀學校</option>
+            </select>
+            <input id="sheet-search-input" type="text" oninput="renderSheetTable()" placeholder="搜尋姓名、學校、班級或手機..." class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div class="overflow-x-auto mt-5 rounded-2xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold whitespace-nowrap">
+                <tr>
+                  <th class="px-3 py-3 text-left">列號</th>
+                  <th class="px-3 py-3 text-left">報名狀態</th>
+                  <th class="px-3 py-3 text-left">學生姓名</th>
+                  <th class="px-3 py-3 text-left">學生生日</th>
+                  <th class="px-3 py-3 text-left">學生身份證字號</th>
+                  <th class="px-3 py-3 text-left">就讀學校</th>
+                  <th class="px-3 py-3 text-left">班級／座號</th>
+                  <th class="px-3 py-3 text-left">餐別/餐食選擇</th>
+                  <th class="px-3 py-3 text-left">家長(監護人)姓名</th>
+                  <th class="px-3 py-3 text-left">家長(監護人)手機</th>
+                  <th class="px-3 py-3 text-center">12/25 報到</th>
+                  <th class="px-3 py-3 text-center">12/25 領餐</th>
+                  <th class="px-3 py-3 text-center">12/26 報到</th>
+                  <th class="px-3 py-3 text-center">12/26 領餐</th>
+                  <th class="px-3 py-3 text-right">管理操作</th>
+                </tr>
+              </thead>
+              <tbody id="sheet-overview-tbody" class="divide-y divide-slate-100 bg-white whitespace-nowrap"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 頁尾 -->
+  <footer class="bg-white border-t border-slate-200 py-5 px-4 text-center text-xs text-slate-500">
+    臺師大USR國中小自然科學實驗營隊｜報名查詢・現場報到・餐別/餐食選擇核銷系統（即時連動 Google Sheet gid=101988920）
+  </footer>
+
+  <!-- =====================================================================
+       彈窗 1：學生／家長／各校資料確認與修正視窗
+       ===================================================================== -->
+  <div id="data-correction-modal" onclick="if (event.target === this) closeDataCorrectionModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto animate-fade-up">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">✏️ 確認並修正報名資料</h3>
+          <p class="text-xs text-slate-500 mt-0.5">修正後將立即更新系統畫面並直接雙向寫回 Google Sheet（gid=101988920）。</p>
+        </div>
+        <button type="button" onclick="closeDataCorrectionModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold">
+          ✕
+        </button>
+      </div>
+
+      <form onsubmit="saveDataCorrection(event)" class="mt-4 space-y-4">
+        <input id="corr-record-id" type="hidden" />
+        <input id="corr-source-mode" type="hidden" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">學生姓名</label>
+            <input id="corr-student-name" type="text" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">就讀學校</label>
+            <input id="corr-school-name" type="text" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">班級</label>
+            <input id="corr-class-input" type="text" placeholder="例如：六忠 或 701" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">座號</label>
+            <input id="corr-seat-input" type="text" placeholder="例如：8" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">餐別/餐食選擇</label>
+            <select id="corr-meal-select" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="葷">🍗 葷食</option>
+              <option value="素">🥬 素食</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)姓名</label>
+            <input id="corr-guardian-name" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)手機</label>
+            <input id="corr-phone-input" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+        </div>
+
+        <div id="corr-sensitive-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">學生身份證字號</label>
+            <input id="corr-student-id" type="text" maxlength="12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">學生生日</label>
+            <input id="corr-student-dob" type="text" placeholder="例如：2015/5/12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)身份證字號</label>
+            <input id="corr-guardian-id" type="text" maxlength="12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)生日</label>
+            <input id="corr-guardian-dob" type="text" placeholder="例如：1982/8/20" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
+          🟢 已啟用 Google Sheet 強制雙向寫回，按下確認後將直接更新試算表（gid=101988920）對應資料列。
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeDataCorrectionModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
+            取消
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs">
+            ✅ 確認並更新至 Google Sheet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       彈窗 2：管理員調整報名狀態／失敗原因視窗
+       ===================================================================== -->
+  <div id="edit-status-modal" onclick="if (event.target === this) closeEditStatusModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-fade-up">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">調整報名審核狀態</h3>
+          <p id="edit-student-label" class="text-xs text-slate-500 mt-0.5"></p>
+        </div>
+        <button type="button" onclick="closeEditStatusModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold">
+          ✕
+        </button>
+      </div>
+
+      <form onsubmit="saveEditedStatus(event)" class="mt-4 space-y-4">
+        <input id="edit-record-id" type="hidden" />
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">報名狀態</label>
+          <select id="edit-reg-status" onchange="toggleFailReasonField()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="成功">✅ 報名成功</option>
+            <option value="審核中">⚠️ 審核中</option>
+            <option value="失敗">❌ 報名失敗</option>
+          </select>
+        </div>
+        <div id="edit-fail-reason-wrap" class="hidden">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">失敗／審核備註說明</label>
+          <input id="edit-fail-reason" type="text" placeholder="例如：資料待補件、重複報名或名額已滿" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeEditStatusModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
+            取消
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">
+            儲存並寫回 Google Sheet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       彈窗 3：尚未報到名單（含學生姓名、就讀學校、班級與監護人連絡電話）
+       ===================================================================== -->
+  <div id="unarrived-list-modal" onclick="if (event.target === this) closeUnarrivedListModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 max-h-[88vh] flex flex-col animate-fade-up">
+      <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 shrink-0">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold" id="unarrived-modal-day-badge">12/25（五）第一天</span>
+            <h3 class="text-lg font-bold text-slate-900">⏳ 尚未報到學生名單與監護人連絡電話</h3>
+          </div>
+          <p id="unarrived-modal-subtitle" class="text-xs text-slate-500 mt-1">共 0 位錄取學員尚未完成報到（點擊電話號碼可直接撥打聯繫）</p>
+        </div>
+        <button type="button" onclick="closeUnarrivedListModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <div class="mt-3 shrink-0">
+        <input id="unarrived-modal-search" type="text" oninput="renderUnarrivedModalContent()" placeholder="快速搜尋學生姓名、就讀學校、班級或監護人電話..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-amber-500" />
+      </div>
+
+      <div class="overflow-auto mt-4 rounded-2xl border border-slate-200 flex-1">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+          <thead class="bg-amber-50/80 text-slate-700 text-xs font-semibold sticky top-0">
+            <tr>
+              <th class="px-4 py-3 text-left">序</th>
+              <th class="px-4 py-3 text-left">學生姓名</th>
+              <th class="px-4 py-3 text-left">就讀學校</th>
+              <th class="px-4 py-3 text-left">班級</th>
+              <th class="px-4 py-3 text-left">監護人連絡電話</th>
+              <th class="px-4 py-3 text-right">現場報到</th>
+            </tr>
+          </thead>
+          <tbody id="unarrived-modal-tbody" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end shrink-0">
+        <button type="button" onclick="closeUnarrivedListModal()" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold">
+          關閉視窗
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       彈窗 4：葷食／素食便當未領取名單（學生姓名、就讀學校、年級）
+       ===================================================================== -->
+  <div id="unpicked-meal-modal" onclick="if (event.target === this) closeUnpickedMealModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[88vh] flex flex-col animate-fade-up">
+      <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 shrink-0">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="unpicked-modal-day-badge" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">12/25（五）第一天</span>
+            <h3 id="unpicked-modal-title" class="text-lg font-bold text-slate-900">🍗 葷食便當未領取名單</h3>
+          </div>
+          <p id="unpicked-modal-subtitle" class="text-xs text-slate-500 mt-1">共 0 位當日已報到學員尚未領取便當</p>
+        </div>
+        <button type="button" onclick="closeUnpickedMealModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <div class="mt-3 shrink-0">
+        <input id="unpicked-modal-search" type="text" oninput="renderUnpickedMealModalContent()" placeholder="快速搜尋學生姓名、就讀學校或年級..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <div class="overflow-auto mt-4 rounded-2xl border border-slate-200 flex-1">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+          <thead id="unpicked-modal-thead" class="bg-slate-50 text-slate-700 text-xs font-semibold sticky top-0">
+            <tr>
+              <th class="px-4 py-3 text-left">序</th>
+              <th class="px-4 py-3 text-left">學生姓名</th>
+              <th class="px-4 py-3 text-left">就讀學校</th>
+              <th class="px-4 py-3 text-left">年級</th>
+              <th class="px-4 py-3 text-right">領餐核銷</th>
+            </tr>
+          </thead>
+          <tbody id="unpicked-modal-tbody" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
+      </div>
+
+      <div id="unpicked-modal-footer-note" class="mt-3 text-xs text-slate-500 shrink-0"></div>
+
+      <div class="mt-3 pt-3 border-t border-slate-100 flex justify-end shrink-0">
+        <button type="button" onclick="closeUnpickedMealModal()" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold">
+          關閉視窗
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. 系統核心常數與全域狀態
+    // =========================================================================
+    const GOOGLE_SHEET_ID = '1LWurYQjSiGIb5b0DDdXqyk0rD8zIFbuMDA-Raleey9E';
+    const GOOGLE_SHEET_GID = '101988920';
+    const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGO2IvZ_TTMGSBE8YIyB5SnlSATAosFIxjwQo284mE11vfyPvqgZMpcU1eXHWBGjVfxA/exec';
+    const ADMIN_PASSWORD = '12251226';
+
+    const appState = {
+      activeTab: 'lookup',
+      lookupMode: 'student',
+      activeDay: 'd1',
+      checkinSubView: 'self',
+      staffUnlocked: false,
+      mealsUnlocked: false,
+      sheetUnlocked: false,
+      openDrawerAfterUnlock: false,
+      appsScriptUrl: DEFAULT_APPS_SCRIPT_URL,
+      records: [],
+      colMap: null,
+      schoolStudentCounts: {},
+      lastQueriedStudentId: null,
+      lastQueriedSchoolCode: '',
+      unpickedModalMealType: '葷',
+      recentEdits: {}
+    };
+
+    // =========================================================================
+    // 2. 教育部國教署官方 6 碼學校代碼對照表
+    // =========================================================================
+    const MOE_SCHOOL_CODES = {
+      // 國小代碼
+      '大園國小': '034624',
+      '內海國小': '034626',
+      '溪海國小': '034627',
+      '潮音國小': '034628',
+      '竹圍國小': '034629',
+      '菓林國小': '034630',
+      '果林國小': '034630',
+      '埔心國小': '034633',
+      '五權國小': '034634',
+      '草漯國小': '034719',
+      '大新國小': '034783',
+      '龍山國小': '034611',
+      '龍安國小': '034786',
+      '光明國小': '034761',
+      '大安國小': '034651',
+      '元生國小': '034774',
+      '青埔國小': '034674',
+      '自立國小': '034679',
+      '林森國小': '034753',
+      '建德國小': '034752',
+      '忠福國小': '034764',
+      '內壢國小': '034675',
+      '新街國小': '034670',
+      '信義國小': '034671',
+      '義興國小': '034767',
+      '板橋重慶國小': '014772',
+      '重慶國小': '014772',
+      '長春國小': '343604',
+
+      // 國中／中小學代碼
+      '大園國中': '034509',
+      '竹圍國中': '034510',
+      '草漯國中': '034534',
+      '經國國中': '034562',
+      '內壢國中': '034522',
+      '永豐國中': '034347',
+      '永豐高中附設國中部': '034347',
+      '永豐高中國中部': '034347',
+      '台北市陽明高中國中部': '413301',
+      '臺北市陽明高中國中部': '413301',
+      '陽明高中國中部': '413301',
+      '凌雲國中': '034539',
+      '光明國中': '034550',
+      '介壽國中': '034541',
+      '新興國際中小學': '031320',
+      '新興國際中小學國小部': '031320',
+      '新興國際中小學國中部': '031320',
+      '青埔國中': '034565',
+      '中壢國中': '034518',
+      '興南國中': '034525',
+      '大崙國中': '034523',
+      '慈文國中': '034542',
+      '泰山國中': '014528',
+      '有得雙語中小學國中部': '031502',
+      '有得雙語中小學': '031502',
+      '有得國中部': '031502',
+      '龍岡國中': '034524',
+      '桃園國中': '034501',
+      '東興國中': '034527',
+      '文昌國中': '034503',
+      '三峽明德高中附屬國中部': '014326',
+      '明德高中附屬國中部': '014326',
+      '明德國中部': '014326'
+    };
+
+    const CODE_TO_PRIMARY_SCHOOL = {
+      '034624': '大園國小',
+      '034626': '內海國小',
+      '034627': '溪海國小',
+      '034628': '潮音國小',
+      '034629': '竹圍國小',
+      '034630': '菓林國小',
+      '034633': '埔心國小',
+      '034634': '五權國小',
+      '034719': '草漯國小',
+      '034783': '大新國小',
+      '034611': '龍山國小',
+      '034786': '龍安國小',
+      '034761': '光明國小',
+      '034651': '大安國小',
+      '034774': '元生國小',
+      '034674': '青埔國小',
+      '034679': '自立國小',
+      '034753': '林森國小',
+      '034752': '建德國小',
+      '034764': '忠福國小',
+      '034675': '內壢國小',
+      '034670': '新街國小',
+      '034671': '信義國小',
+      '034767': '義興國小',
+      '014772': '板橋重慶國小',
+      '343604': '長春國小',
+      '034509': '大園國中',
+      '034510': '竹圍國中',
+      '034534': '草漯國中',
+      '034562': '經國國中',
+      '034522': '內壢國中',
+      '034347': '永豐國中',
+      '413301': '台北市陽明高中國中部',
+      '034539': '凌雲國中',
+      '034550': '光明國中',
+      '034541': '介壽國中',
+      '031320': '新興國際中小學',
+      '034565': '青埔國中',
+      '034518': '中壢國中',
+      '034525': '興南國中',
+      '034523': '大崙國中',
+      '034542': '慈文國中',
+      '014528': '泰山國中',
+      '031502': '有得雙語中小學國中部',
+      '034524': '龍岡國中',
+      '034501': '桃園國中',
+      '034527': '東興國中',
+      '034503': '文昌國中',
+      '014326': '三峽明德高中附屬國中部'
+    };
+
+    const GRADE_SORT_ORDER = {
+      '國小一年級': 1,
+      '國小二年級': 2,
+      '國小三年級': 3,
+      '國小四年級': 4,
+      '國小五年級': 5,
+      '國小六年級': 6,
+      '國中一年級': 7,
+      '國中二年級': 8,
+      '國中三年級': 9
+    };
+
+    // =========================================================================
+    // 3. 校名、年級、班級、座號與排序標準化工具函式
+    // =========================================================================
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function normalizeSchoolName(raw) {
+      let s = String(raw || '').trim();
+      if (!s) return '';
+      s = s.replace(/^(桃園市|新北市|台北市|臺北市|新竹縣|新竹市)/, '');
+      s = s.replace(/^(大園區|中壢區|平鎮區|蘆竹區|觀音區|桃園區|八德區|龍潭區|楊梅區|龜山區|大溪區|新屋區|復興區|板橋區|泰山區|三峽區|士林區|中山區)/, '');
+      s = s.replace(/^(市立|縣立|國立|私立)/, '');
+      s = s.replace(/國民小學$/, '國小').replace(/國民中學$/, '國中');
+      if (s === '果林國小' || s === '果林') return '菓林國小';
+      if (s === '內海') return '內海國小';
+      if (s === '重慶國小') return '板橋重慶國小';
+      if (s === '臺北市陽明高中國中部' || s === '陽明高中國中部') return '台北市陽明高中國中部';
+      if (s === '明德高中附屬國中部' || s === '明德國中部') return '三峽明德高中附屬國中部';
+      return s;
+    }
+
+    function getSchoolCode(schoolName) {
+      const norm = normalizeSchoolName(schoolName);
+      return MOE_SCHOOL_CODES[norm] || MOE_SCHOOL_CODES[schoolName] || '';
+    }
+
+    function cleanOptionalField(val) {
+      const s = String(val || '').trim();
+      if (!s || /^(無|未填|未填寫|不詳|none|null|n\/a|-|—)$/i.test(s)) return '';
+      return s;
+    }
+
+    function formatGradeClassSeat(r, includeSchool = false) {
+      const parts = [];
+      if (includeSchool && r.schoolName) parts.push(r.schoolName);
+      if (r.gradeLevel && r.gradeLevel !== r.classDisplay) parts.push(r.gradeLevel);
+      if (r.classDisplay) parts.push(r.classDisplay);
+      if (r.seatDisplay) parts.push(`${r.seatDisplay}號`);
+      return parts.join('・');
+    }
+
+    function parseSchoolClassSeat(raw) {
+      const text = String(raw || '').trim();
+      if (!text) return { schoolName: '', classRaw: '', seatRaw: '' };
+
+      const normalized = text.replace(/[／\\]/g, '/').trim();
+      const parts = normalized.split('/').map(p => p.trim());
+
+      if (parts.length >= 4) {
+        const schoolName = normalizeSchoolName(parts[0]);
+        const gradePart = cleanOptionalField(parts[1]);
+        const classPart = cleanOptionalField(parts[2]);
+        let classRaw = '';
+        if (gradePart && classPart) {
+          classRaw = /^\d+$/.test(gradePart) && /^\d+$/.test(classPart)
+            ? `${gradePart}${classPart.padStart(2, '0')}`
+            : `${gradePart}${classPart}`;
+        } else {
+          classRaw = gradePart || classPart;
+        }
+        const seatRaw = cleanOptionalField((parts[3] || '').replace(/號/g, ''));
+        return { schoolName, classRaw, seatRaw };
+      }
+
+      if (parts.length >= 2) {
+        const schoolName = normalizeSchoolName(parts[0]);
+        const classRaw = cleanOptionalField(parts[1]);
+        const seatRaw = cleanOptionalField((parts[2] || '').replace(/號/g, ''));
+        return { schoolName, classRaw, seatRaw };
+      }
+
+      const m = normalized.match(/^([^\d\s一二三四五六七八九]+(?:國小|國中|中小學|國中部|高中附設國中部|附屬國中部))\s*(.*)$/);
+      if (m) {
+        const schoolName = normalizeSchoolName(m[1]);
+        const rest = cleanOptionalField(m[2] || '');
+        if (!rest) return { schoolName, classRaw: '', seatRaw: '' };
+        const seatMatch = rest.match(/(\d+)\s*號?$/);
+        if (seatMatch && rest.length > seatMatch[0].length) {
+          const classRaw = cleanOptionalField(rest.slice(0, rest.length - seatMatch[0].length).replace(/班$/, ''));
+          return { schoolName, classRaw, seatRaw: cleanOptionalField(seatMatch[1]) };
+        }
+        return { schoolName, classRaw: rest, seatRaw: '' };
+      }
+
+      return { schoolName: normalizeSchoolName(normalized), classRaw: '', seatRaw: '' };
+    }
+
+    function inferGradeLevel(schoolName, classRaw, explicitGrade = '') {
+      const g = cleanOptionalField(explicitGrade);
+      if (GRADE_SORT_ORDER[g]) return g;
+
+      const c = cleanOptionalField(classRaw);
+      if (!g && !c) return '';
+
+      const isJuniorHigh = /(國中|國中部)/.test(schoolName) && !/國小/.test(schoolName);
+
+      const numMatch = c.match(/^([1-9])\d{2}$/);
+      if (numMatch) {
+        const digit = parseInt(numMatch[1], 10);
+        if (digit === 7 || (isJuniorHigh && digit === 1)) return '國中一年級';
+        if (digit === 8 || (isJuniorHigh && digit === 2)) return '國中二年級';
+        if (digit === 9 || (isJuniorHigh && digit === 3)) return '國中三年級';
+        if (digit >= 1 && digit <= 6) {
+          const map = ['', '國小一年級', '國小二年級', '國小三年級', '國小四年級', '國小五年級', '國小六年級'];
+          return map[digit];
+        }
+      }
+
+      const zhMap = {
+        '一': '國小一年級', '1': '國小一年級',
+        '二': '國小二年級', '2': '國小二年級',
+        '三': '國小三年級', '3': '國小三年級',
+        '四': '國小四年級', '4': '國小四年級',
+        '五': '國小五年級', '5': '國小五年級',
+        '六': '國小六年級', '6': '國小六年級',
+        '七': '國中一年級', '7': '國中一年級', '國一': '國中一年級',
+        '八': '國中二年級', '8': '國中二年級', '國二': '國中二年級',
+        '九': '國中三年級', '9': '國中三年級', '國三': '國中三年級'
+      };
+
+      for (const key of ['國一', '國二', '國三', '七', '八', '九', '一', '二', '三', '四', '五', '六', '1', '2', '3', '4', '5', '6', '7', '8', '9']) {
+        if (c.startsWith(key) || g.includes(key)) {
+          if (isJuniorHigh && ['一', '二', '三', '1', '2', '3'].includes(key)) {
+            return (key === '一' || key === '1') ? '國中一年級' : (key === '二' || key === '2') ? '國中二年級' : '國中三年級';
+          }
+          return zhMap[key];
+        }
+      }
+
+      return '';
+    }
+
+    function formatClassForSchoolRoster(classRaw, gradeLevel) {
+      const c = cleanOptionalField(classRaw);
+      if (!c) return '';
+      if (/^\d{3}$/.test(c)) return c;
+      const shortZh = c.match(/^([一二三四五六七八九])([甲乙丙丁戊己忠孝仁愛信義和平])$/);
+      if (shortZh) {
+        return `${shortZh[1]}年${shortZh[2]}班`;
+      }
+      if (gradeLevel && !/[一二三四五六七八九0-9]/.test(c)) {
+        const gradePrefixMap = {
+          '國小一年級': '一年', '國小二年級': '二年', '國小三年級': '三年',
+          '國小四年級': '四年', '國小五年級': '五年', '國小六年級': '六年',
+          '國中一年級': '七年', '國中二年級': '八年', '國中三年級': '九年'
+        };
+        const prefix = gradePrefixMap[gradeLevel] || '';
+        if (prefix) {
+          return c.endsWith('班') ? `${prefix}${c}` : `${prefix}${c}班`;
+        }
+      }
+      return c;
+    }
+
+    function formatSeatForSchoolRoster(seatRaw) {
+      const s = cleanOptionalField(String(seatRaw || '').replace(/號/g, ''));
+      if (!s) return '';
+      const num = parseInt(s, 10);
+      return Number.isNaN(num) ? s : String(num);
+    }
+
+    function getPhoneLast4(phoneRaw) {
+      const chunks = String(phoneRaw || '').split(/\D+/).filter(Boolean);
+      if (chunks.length === 0) return '';
+      return chunks[0].slice(-4);
+    }
+
+    function maskName(name) {
+      const s = String(name || '').trim();
+      if (!s) return '';
+      if (s.length === 1) return s;
+      if (s.length === 2) return s[0] + 'o';
+      return s[0] + 'o'.repeat(s.length - 2) + s[s.length - 1];
+    }
+
+    function maskIdNumber(idStr) {
+      const s = String(idStr || '').trim().toUpperCase();
+      if (!s) return '—';
+      if (s.length <= 4) return s;
+      return s.slice(0, 3) + '****' + s.slice(-3);
+    }
+
+    function normalizeMeal(raw) {
+      const s = String(raw || '').trim();
+      if (/素/.test(s) || s === '是' || s === 'Y' || s === 'TRUE') return '素';
+      return '葷';
+    }
+
+    function getCurrentTimeHHMM() {
+      const now = new Date();
+      return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function buildSchoolStudentCounts(records) {
+      const counts = {};
+      records.forEach(r => {
+        if (r.regStatus === '成功' && r.schoolName) {
+          counts[r.schoolName] = (counts[r.schoolName] || 0) + 1;
+        }
+      });
+      return counts;
+    }
+
+    function compareStudentsForRoster(a, b) {
+      const countA = appState.schoolStudentCounts[a.schoolName] ?? 9999;
+      const countB = appState.schoolStudentCounts[b.schoolName] ?? 9999;
+      if (countA !== countB) return countA - countB;
+
+      const codeA = a.schoolCode || '999999';
+      const codeB = b.schoolCode || '999999';
+      if (codeA !== codeB) return codeA.localeCompare(codeB);
+
+      if (a.schoolName !== b.schoolName) return a.schoolName.localeCompare(b.schoolName, 'zh-Hant');
+
+      const gradeA = GRADE_SORT_ORDER[a.gradeLevel] || 99;
+      const gradeB = GRADE_SORT_ORDER[b.gradeLevel] || 99;
+      if (gradeA !== gradeB) return gradeA - gradeB;
+
+      const classA = String(a.classDisplay || '');
+      const classB = String(b.classDisplay || '');
+      if (classA !== classB) return classA.localeCompare(classB, 'zh-Hant', { numeric: true });
+
+      const seatNumA = parseInt(a.seatDisplay, 10);
+      const seatNumB = parseInt(b.seatDisplay, 10);
+      const hasSeatA = !Number.isNaN(seatNumA);
+      const hasSeatB = !Number.isNaN(seatNumB);
+      if (hasSeatA && hasSeatB && seatNumA !== seatNumB) return seatNumA - seatNumB;
+      if (hasSeatA && !hasSeatB) return -1;
+      if (!hasSeatA && hasSeatB) return 1;
+
+      return a.rowNumber - b.rowNumber;
+    }
+
+    // =========================================================================
+    // 4. Google Sheet 欄位自動對齊與解析
+    // =========================================================================
+    function normalizeSheetDateText(raw) {
+      let s = String(raw || '').trim();
+      if (!s) return '';
+      const gvizDate = s.match(/^Date\((\d+),(\d+),(\d+)(?:,\d+,\d+,\d+)?\)$/);
+      if (gvizDate) {
+        return `${gvizDate[1]}/${parseInt(gvizDate[2], 10) + 1}/${gvizDate[3]}`;
+      }
+      s = s.replace(/\s+(?:上午|下午)?\s*12:00:00(?:\s*[AP]M)?$/i, '').replace(/\s+00:00:00$/, '');
+      return s.trim();
+    }
+
+    function detectColumnMapping(headers, sampleRows) {
+      const map = {
+        timestamp: -1,
+        regStatus: -1,
+        failReason: -1,
+        studentName: -1,
+        studentId: -1,
+        studentDob: -1,
+        guardianName: -1,
+        guardianId: -1,
+        guardianDob: -1,
+        phone: -1,
+        schoolCombined: -1,
+        classOnly: -1,
+        seatOnly: -1,
+        gradeOnly: -1,
+        meal: -1,
+        d1Ci: -1,
+        d1Meal: -1,
+        d2Ci: -1,
+        d2Meal: -1
+      };
+
+      const idCols = [];
+      const dobCols = [];
+
+      headers.forEach((rawH, idx) => {
+        const h = String(rawH || '').replace(/\s+/g, '');
+        if (!h) return;
+
+        if (/時間戳記|Timestamp/i.test(h)) map.timestamp = idx;
+        else if (/報名狀態|錄取狀態|審核狀態|資格/.test(h)) map.regStatus = idx;
+        else if (/失敗原因|備註|未錄取原因|審核說明/.test(h)) map.failReason = idx;
+        else if (/學生姓名|學員姓名/.test(h) || (h === '姓名' && map.studentName === -1)) map.studentName = idx;
+        else if (/學生身分證|學生身份證/.test(h)) map.studentId = idx;
+        else if (/學生生日|學生出生/.test(h)) map.studentDob = idx;
+        else if (/監護人姓名|家長姓名/.test(h) || (/監護人|家長/.test(h) && !/身分|身份|生日|出生|手機|電話/.test(h) && map.guardianName === -1)) map.guardianName = idx;
+        else if (/監護人身分證|監護人身份證|家長身分證|家長身份證/.test(h)) map.guardianId = idx;
+        else if (/監護人生日|監護人出生|家長生日|家長出生/.test(h)) map.guardianDob = idx;
+        else if (/手機|聯絡電話|連絡電話|電話/.test(h) && map.phone === -1) map.phone = idx;
+        else if (/就讀學校|學校/.test(h) && map.schoolCombined === -1) map.schoolCombined = idx;
+        else if (/^年級$/.test(h)) map.gradeOnly = idx;
+        else if (/^班級$/.test(h)) map.classOnly = idx;
+        else if (/^座號$/.test(h)) map.seatOnly = idx;
+        else if (/餐別|餐食|用餐|午餐|葷素|素食/.test(h) && !/12\/25|12\/26|第一天|第二天/.test(h) && map.meal === -1) map.meal = idx;
+        else if (/12\/25.*報到|第一天.*報到|D1.*報到/i.test(h)) map.d1Ci = idx;
+        else if (/12\/25.*(領餐|用餐|便當)|第一天.*(領餐|用餐|便當)|D1.*領餐/i.test(h)) map.d1Meal = idx;
+        else if (/12\/26.*報到|第二天.*報到|D2.*報到/i.test(h)) map.d2Ci = idx;
+        else if (/12\/26.*(領餐|用餐|便當)|第二天.*(領餐|用餐|便當)|D2.*領餐/i.test(h)) map.d2Meal = idx;
+
+        if (/身分證|身份證/.test(h)) idCols.push(idx);
+        if (/生日|出生/.test(h)) dobCols.push(idx);
+      });
+
+      if (map.studentId === -1 && idCols.length >= 1) map.studentId = idCols[0];
+      if (map.guardianId === -1 && idCols.length >= 2) map.guardianId = idCols[1];
+      if (map.studentDob === -1 && dobCols.length >= 1) map.studentDob = dobCols[0];
+      if (map.guardianDob === -1 && dobCols.length >= 2) map.guardianDob = dobCols[1];
+
+      if (Array.isArray(sampleRows) && sampleRows.length > 0) {
+        const colCount = headers.length;
+        if (map.studentDob === -1 || map.guardianDob === -1) {
+          const dateCols = [];
+          for (let c = 0; c < colCount; c++) {
+            if (c === map.timestamp || c === map.studentDob || c === map.guardianDob) continue;
+            const dateMatches = sampleRows.slice(0, 10).filter(r => {
+              const v = normalizeSheetDateText(r[c]);
+              return /^\d{2,4}[\/\-年.]\d{1,2}[\/\-月.]\d{1,2}日?$/.test(v);
+            }).length;
+            if (dateMatches >= 1) dateCols.push(c);
+          }
+          if (map.studentDob === -1 && dateCols.length > 0) map.studentDob = dateCols.shift();
+          if (map.guardianDob === -1 && dateCols.length > 0) map.guardianDob = dateCols.shift();
+        }
+        if (map.meal === -1) {
+          for (let c = 0; c < colCount; c++) {
+            const mealMatches = sampleRows.slice(0, 10).filter(r => /^(葷|素|葷食|素食|蛋奶素|全素|吃素)$/.test(String(r[c] || '').trim())).length;
+            if (mealMatches >= 1) {
+              map.meal = c;
+              break;
+            }
+          }
+        }
+      }
+
+      return map;
+    }
+
+    function interpretSheetRegStatus(statusCellRaw, failReasonRaw) {
+      const s = String(statusCellRaw || '').trim();
+      const reason = String(failReasonRaw || '').trim();
+      if (/失敗|未錄取|不通過|取消|退件|重複|額滿/.test(s)) {
+        return { regStatus: '失敗', failReason: reason || s };
+      }
+      if (/審核中|待審|審查中|處理中|補件/.test(s)) {
+        return { regStatus: '審核中', failReason: reason };
+      }
+      if (/成功|錄取|通過|正取/.test(s)) {
+        return { regStatus: '成功', failReason: reason };
+      }
+      if (reason && !/無|正常/.test(reason)) {
+        return { regStatus: '失敗', failReason: reason };
+      }
+      return { regStatus: '成功', failReason: '' };
+    }
+
+    function parseCheckinCell(raw) {
+      const s = String(raw || '').trim();
+      if (!s || /^未|否|false|0|-|—$/i.test(s)) return { done: false, time: '' };
+      const tm = s.match(/(\d{1,2}:\d{2})/);
+      return { done: true, time: tm ? tm[1] : '' };
+    }
+
+    function processSheetRows(rows, preserveExistingState = false, colMap = null) {
+      const existingByKey = {};
+      if (preserveExistingState && Array.isArray(appState.records)) {
+        appState.records.forEach(old => {
+          const tsKey = old.timestamp ? `${old.rowNumber}_TS_${old.timestamp}` : `${old.rowNumber}_${old.originalStudentName || old.studentName}`;
+          existingByKey[tsKey] = old;
+          existingByKey[`${old.rowNumber}_${old.originalStudentName || old.studentName}`] = old;
+        });
+      }
+
+      const getCell = (row, mappedIdx, fallbackIdx) => {
+        const idx = (typeof mappedIdx === 'number' && mappedIdx >= 0) ? mappedIdx : fallbackIdx;
+        return (idx >= 0 && idx < row.length) ? row[idx] : '';
+      };
+
+      return rows
+        .map((row, idx) => {
+          const timestamp = String(getCell(row, colMap?.timestamp, 0) || '').trim();
+          const statusCell = getCell(row, colMap?.regStatus, 1);
+          const failReasonCell = getCell(row, colMap?.failReason, 2);
+          const studentName = String(getCell(row, colMap?.studentName, 3) || '').trim();
+          if (!studentName) return null;
+
+          const studentId = cleanOptionalField(getCell(row, colMap?.studentId, 4)).toUpperCase();
+          const studentDob = cleanOptionalField(normalizeSheetDateText(getCell(row, colMap?.studentDob, 5)));
+          const guardianName = cleanOptionalField(getCell(row, colMap?.guardianName, 6));
+          const guardianId = cleanOptionalField(getCell(row, colMap?.guardianId, 7)).toUpperCase();
+          const guardianDob = cleanOptionalField(normalizeSheetDateText(getCell(row, colMap?.guardianDob, 8)));
+          const phone = cleanOptionalField(getCell(row, colMap?.phone, 9));
+          const schoolRaw = String(getCell(row, colMap?.schoolCombined, 10) || '').trim();
+          const mealRaw = String(getCell(row, colMap?.meal, 11) || '').trim();
+
+          const parsedSchool = parseSchoolClassSeat(schoolRaw);
+          const schoolName = parsedSchool.schoolName;
+          const explicitGrade = colMap && colMap.gradeOnly >= 0 ? cleanOptionalField(row[colMap.gradeOnly]) : '';
+          const explicitClass = colMap && colMap.classOnly >= 0 ? cleanOptionalField(row[colMap.classOnly]) : '';
+          const explicitSeat = colMap && colMap.seatOnly >= 0 ? cleanOptionalField(row[colMap.seatOnly]) : '';
+
+          const rawClassVal = explicitClass || parsedSchool.classRaw;
+          const rawSeatVal = explicitSeat || parsedSchool.seatRaw;
+          const gradeLevel = inferGradeLevel(schoolName, rawClassVal, explicitGrade);
+          const classDisplay = formatClassForSchoolRoster(rawClassVal, gradeLevel);
+          const seatDisplay = formatSeatForSchoolRoster(rawSeatVal);
+
+          const { regStatus, failReason } = interpretSheetRegStatus(statusCell, failReasonCell);
+
+          const d1CiParsed = parseCheckinCell(getCell(row, colMap?.d1Ci, 12));
+          const d1MealParsed = parseCheckinCell(getCell(row, colMap?.d1Meal, 13));
+          const d2CiParsed = parseCheckinCell(getCell(row, colMap?.d2Ci, 14));
+          const d2MealParsed = parseCheckinCell(getCell(row, colMap?.d2Meal, 15));
+
+          const prev = existingByKey[`${idx + 2}_TS_${timestamp}`] || existingByKey[`${idx + 2}_${studentName}`];
+
+          return {
+            id: `rec_${idx + 2}`,
+            rowNumber: idx + 2,
+            timestamp,
+            regStatus,
+            failReason,
+            studentName,
+            originalStudentName: studentName,
+            studentId,
+            studentDob,
+            guardianName,
+            guardianId,
+            guardianDob,
+            phone,
+            phoneLast4: getPhoneLast4(phone),
+            schoolName,
+            schoolCode: getSchoolCode(schoolName),
+            gradeLevel,
+            classDisplay,
+            seatDisplay,
+            meal: normalizeMeal(mealRaw),
+            d1CheckedIn: d1CiParsed.done || (prev ? prev.d1CheckedIn : false),
+            d1CheckinTime: d1CiParsed.time || (prev ? prev.d1CheckinTime : ''),
+            d1MealPicked: d1MealParsed.done || (prev ? prev.d1MealPicked : false),
+            d1MealTime: d1MealParsed.time || (prev ? prev.d1MealTime : ''),
+            d2CheckedIn: d2CiParsed.done || (prev ? prev.d2CheckedIn : false),
+            d2CheckinTime: d2CiParsed.time || (prev ? prev.d2CheckinTime : ''),
+            d2MealPicked: d2MealParsed.done || (prev ? prev.d2MealPicked : false),
+            d2MealTime: d2MealParsed.time || (prev ? prev.d2MealTime : '')
+          };
+        })
+        .filter(Boolean);
+    }
+
+    function parseGvizResponseText(rawText) {
+      const start = rawText.indexOf('{');
+      const end = rawText.lastIndexOf('}');
+      if (start === -1 || end === -1) throw new Error('Invalid GViz response');
+      const json = JSON.parse(rawText.slice(start, end + 1));
+      const table = json.table || {};
+      const cols = table.cols || [];
+      const rows = table.rows || [];
+
+      let headers = cols.map(c => String(c.label || '').trim());
+      let dataRows = rows.map(r => (r.c || []).map(cell => (cell && (cell.f ?? cell.v)) ?? ''));
+
+      const hasHeaderLabels = headers.some(h => /姓名|學校|手機|時間戳記|身分證|身份證/.test(h));
+      if (!hasHeaderLabels && dataRows.length > 0) {
+        headers = dataRows[0].map(v => String(v || '').trim());
+        dataRows = dataRows.slice(1);
+      }
+
+      return { headers, dataRows };
+    }
+
+    function fetchSheetViaJsonp(url) {
+      return new Promise((resolve, reject) => {
+        const cbName = `__gviz_cb_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('JSONP timeout'));
+        }, 12000);
+
+        function cleanup() {
+          clearTimeout(timeout);
+          delete window[cbName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[cbName] = function (data) {
+          cleanup();
+          resolve(data);
+        };
+
+        script.onerror = function () {
+          cleanup();
+          reject(new Error('JSONP script error'));
+        };
+
+        script.src = `${url}&tqx=responseHandler:${cbName}`;
+        document.body.appendChild(script);
+      });
+    }
+
+    async function syncFromGoogleSheet(isSilent = false) {
+      const badge = document.getElementById('sync-status-badge');
+      const syncIcon = document.getElementById('header-sync-icon');
+      const syncText = document.getElementById('header-sync-text');
+
+      if (syncIcon) syncIcon.classList.add('animate-spin');
+      if (syncText) syncText.textContent = '同步中...';
+      if (badge) {
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> 正在同步 Google Sheet...`;
+      }
+
+      const baseUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?gid=${GOOGLE_SHEET_GID}&_t=${Date.now()}`;
+
+      try {
+        let headers = [];
+        let dataRows = [];
+
+        try {
+          const res = await fetch(`${baseUrl}&tqx=out:json`, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const text = await res.text();
+          const parsed = parseGvizResponseText(text);
+          headers = parsed.headers;
+          dataRows = parsed.dataRows;
+        } catch (fetchErr) {
+          const jsonpObj = await fetchSheetViaJsonp(baseUrl);
+          const table = jsonpObj.table || {};
+          headers = (table.cols || []).map(c => String(c.label || '').trim());
+          dataRows = (table.rows || []).map(r => (r.c || []).map(cell => (cell && (cell.f ?? cell.v)) ?? ''));
+          const hasHeaderLabels = headers.some(h => /姓名|學校|手機|時間戳記|身分證|身份證/.test(h));
+          if (!hasHeaderLabels && dataRows.length > 0) {
+            headers = dataRows[0].map(v => String(v || '').trim());
+            dataRows = dataRows.slice(1);
+          }
+        }
+
+        const colMap = detectColumnMapping(headers, dataRows);
+        appState.colMap = colMap;
+        appState.records = processSheetRows(dataRows, appState.records.length > 0, colMap);
+        populateSchoolDropdowns();
+        syncAllViews();
+
+        const nowTime = getCurrentTimeHHMM();
+        if (badge) {
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> 已連線 Google Sheet（共 ${appState.records.length} 筆・${nowTime} 更新）`;
+        }
+        if (!isSilent) {
+          showToast(`✅ 已從 Google Sheet 更新最新資料（共 ${appState.records.length} 筆）`, 'success');
+        }
+      } catch (err) {
+        console.error('Google Sheet sync error:', err);
+        if (badge) {
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span> Google Sheet 連線受限（請確認試算表權限或網路）`;
+        }
+        if (!isSilent) {
+          showToast('⚠️ 無法直接讀取 Google Sheet，請確認網路連線或試算表公開檢視權限', 'error');
+        }
+      } finally {
+        if (syncIcon) syncIcon.classList.remove('animate-spin');
+        if (syncText) syncText.textContent = '立即更新資料';
+      }
+    }
+
+    // =========================================================================
+    // 5. Google Apps Script 強制雙向寫回引擎
+    // =========================================================================
+    async function pushRowUpdateToAppsScript(rec, overrideOriginalName = null) {
+      const targetUrl = (appState.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL).trim();
+      if (!targetUrl) {
+        return { ok: false, reason: 'NO_URL' };
+      }
+
+      const combinedSchoolClassSeat = [rec.schoolName, rec.classDisplay, rec.seatDisplay].filter(Boolean).join('/');
+      const cm = appState.colMap;
+      const to1Based = (idx) => (typeof idx === 'number' && idx >= 0) ? idx + 1 : -1;
+
+      const colHints = cm ? {
+        regStatusCol: to1Based(cm.regStatus),
+        failReasonCol: to1Based(cm.failReason),
+        studentNameCol: to1Based(cm.studentName),
+        studentIdCol: to1Based(cm.studentId),
+        studentDobCol: to1Based(cm.studentDob),
+        guardianNameCol: to1Based(cm.guardianName),
+        guardianIdCol: to1Based(cm.guardianId),
+        guardianDobCol: to1Based(cm.guardianDob),
+        phoneCol: to1Based(cm.phone),
+        schoolCol: to1Based(cm.schoolCombined),
+        gradeCol: to1Based(cm.gradeOnly),
+        classCol: to1Based(cm.classOnly),
+        seatCol: to1Based(cm.seatOnly),
+        mealCol: to1Based(cm.meal),
+        d1CiCol: to1Based(cm.d1Ci),
+        d1MealCol: to1Based(cm.d1Meal),
+        d2CiCol: to1Based(cm.d2Ci),
+        d2MealCol: to1Based(cm.d2Meal)
+      } : {};
+
+      const payload = {
+        gid: GOOGLE_SHEET_GID,
+        rowNumber: rec.rowNumber,
+        timestamp: rec.timestamp,
+        originalStudentName: overrideOriginalName || rec.originalStudentName || rec.studentName,
+        colHints,
+        regStatus: rec.regStatus,
+        failReason: rec.failReason,
+        studentName: rec.studentName,
+        studentId: rec.studentId,
+        studentDob: rec.studentDob,
+        guardianName: rec.guardianName,
+        guardianId: rec.guardianId,
+        guardianDob: rec.guardianDob,
+        phone: rec.phone,
+        schoolName: rec.schoolName,
+        gradeLevel: rec.gradeLevel,
+        classDisplay: rec.classDisplay,
+        seatDisplay: rec.seatDisplay,
+        combinedSchoolClassSeat,
+        meal: rec.meal,
+        d1CheckedIn: rec.d1CheckedIn ? `已報到 ${rec.d1CheckinTime || ''}`.trim() : '未報到',
+        d1MealPicked: rec.d1MealPicked ? `已領餐 ${rec.d1MealTime || ''}`.trim() : '未領餐',
+        d2CheckedIn: rec.d2CheckedIn ? `已報到 ${rec.d2CheckinTime || ''}`.trim() : '未報到',
+        d2MealPicked: rec.d2MealPicked ? `已領餐 ${rec.d2MealTime || ''}`.trim() : '未領餐'
+      };
+
+      try {
+        const res = await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch (e) {}
+        return { ok: data.ok !== false, data };
+      } catch (err) {
+        try {
+          await fetch(targetUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+          return { ok: true, opaque: true };
+        } catch (err2) {
+          console.error('Apps Script writeback failed:', err2);
+          return { ok: false, error: err2 };
+        }
+      }
+    }
+
+    // =========================================================================
+    // 6. 介面導覽、場次切換與通用輔助函式
+    // =========================================================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const colors = {
+        success: 'bg-emerald-900 text-white border-emerald-700',
+        error: 'bg-rose-900 text-white border-rose-700',
+        warning: 'bg-amber-900 text-white border-amber-700',
+        info: 'bg-slate-900 text-white border-slate-700'
+      };
+      const el = document.createElement('div');
+      el.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-xl text-xs font-semibold leading-relaxed animate-fade-up ${colors[type] || colors.info}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => el.remove(), 260);
+      }, 3600);
+    }
+
+    function togglePasswordVisibility(inputId) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function switchMainTab(tabName) {
+      appState.activeTab = tabName;
+      ['lookup', 'checkin', 'meals', 'sheet'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        const panel = document.getElementById(`panel-${t}`);
+        if (btn) {
+          btn.className = (t === tabName)
+            ? 'tab-active px-4 py-3.5 rounded-2xl font-semibold text-sm transition flex items-center justify-center gap-2'
+            : 'tab-inactive px-4 py-3.5 rounded-2xl font-semibold text-sm transition flex items-center justify-center gap-2';
+        }
+        if (panel) panel.classList.toggle('hidden', t !== tabName);
+      });
+      if (tabName === 'meals' && appState.mealsUnlocked) renderMealsPanel();
+      if (tabName === 'checkin' && appState.staffUnlocked) renderStaffDashboard();
+      if (tabName === 'sheet' && appState.sheetUnlocked) renderSheetTable();
+    }
+
+    function switchLookupMode(mode) {
+      appState.lookupMode = mode;
+      const btnStudent = document.getElementById('btn-mode-student');
+      const btnSchool = document.getElementById('btn-mode-school');
+      const viewStudent = document.getElementById('view-student-lookup');
+      const viewSchool = document.getElementById('view-school-lookup');
+
+      if (mode === 'student') {
+        btnStudent.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white shadow-sm transition';
+        btnSchool.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition';
+        viewStudent.classList.remove('hidden');
+        viewSchool.classList.add('hidden');
+      } else {
+        btnSchool.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm transition';
+        btnStudent.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition';
+        viewSchool.classList.remove('hidden');
+        viewStudent.classList.add('hidden');
+      }
+    }
+
+    function switchActiveDay(dayKey) {
+      appState.activeDay = dayKey;
+      const isD1 = dayKey === 'd1';
+
+      const activeDayLabel = document.getElementById('active-day-label');
+      const mealsDayLabel = document.getElementById('meals-day-label');
+      if (activeDayLabel) activeDayLabel.textContent = isD1 ? '12/25（五）第一天營隊' : '12/26（六）第二天營隊';
+      if (mealsDayLabel) mealsDayLabel.textContent = isD1 ? '12/25（五）第一天營隊午餐' : '12/26（六）第二天營隊午餐';
+
+      ['day-btn-d1', 'meal-day-btn-d1'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = isD1
+          ? 'px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm transition'
+          : 'px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+      });
+      ['day-btn-d2', 'meal-day-btn-d2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = !isD1
+          ? 'px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm transition'
+          : 'px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+      });
+
+      syncAllViews();
+    }
+
+    function openSheetSettingsShortcut() {
+      switchMainTab('sheet');
+      if (appState.sheetUnlocked) {
+        const drawer = document.getElementById('apps-script-drawer');
+        if (drawer && drawer.classList.contains('hidden')) {
+          drawer.classList.remove('hidden');
+        }
+        const urlInput = document.getElementById('apps-script-url-input');
+        if (urlInput) urlInput.value = appState.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL;
+      } else {
+        appState.openDrawerAfterUnlock = true;
+        showToast('請先輸入管理密碼解鎖「Google Sheet 資料總覽」，解鎖後將自動開啟連線設定', 'info');
+      }
+    }
+
+    function populateSchoolDropdowns() {
+      const schoolSet = new Set();
+      appState.records.forEach(r => {
+        if (r.schoolName) schoolSet.add(r.schoolName);
+      });
+      const schools = Array.from(schoolSet).sort((a, b) => {
+        const ca = getSchoolCode(a) || '999999';
+        const cb = getSchoolCode(b) || '999999';
+        return ca !== cb ? ca.localeCompare(cb) : a.localeCompare(b, 'zh-Hant');
+      });
+
+      const dropdownConfigs = [
+        { id: 'ci-school', firstLabel: '請選擇就讀學校...', firstVal: '' },
+        { id: 'dash-filter-school', firstLabel: '全部就讀學校', firstVal: 'ALL' },
+        { id: 'meal-filter-school', firstLabel: '全部就讀學校', firstVal: 'ALL' },
+        { id: 'sheet-filter-school', firstLabel: '全部就讀學校', firstVal: 'ALL' }
+      ];
+
+      dropdownConfigs.forEach(cfg => {
+        const sel = document.getElementById(cfg.id);
+        if (!sel) return;
+        const prevVal = sel.value;
+        sel.innerHTML = `<option value="${cfg.firstVal}">${cfg.firstLabel}</option>` +
+          schools.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+        if (prevVal && Array.from(sel.options).some(o => o.value === prevVal)) {
+          sel.value = prevVal;
+        }
+      });
+    }
+
+    function getRegStatusBadgeHtml(regStatus) {
+      if (regStatus === '成功') {
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">✅ 報名成功</span>`;
+      }
+      if (regStatus === '審核中') {
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">⚠️ 審核中</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">❌ 報名失敗</span>`;
+    }
+
+    // =========================================================================
+    // 7. 分頁 1A：學生/家長個人查詢專區
+    // =========================================================================
+    function handleStudentLookup(e) {
+      e.preventDefault();
+      const rawSchool = document.getElementById('student-school-select').value.trim();
+      const normSchool = normalizeSchoolName(rawSchool);
+      const name = document.getElementById('student-name-input').value.trim();
+      const verify4 = document.getElementById('student-verify-input').value.trim();
+      const resultBox = document.getElementById('student-lookup-result');
+
+      const matched = appState.records.find(r => {
+        const schoolMatch = normalizeSchoolName(r.schoolName) === normSchool || r.schoolName.includes(normSchool) || normSchool.includes(r.schoolName);
+        const nameMatch = r.studentName.replace(/\s+/g, '') === name.replace(/\s+/g, '');
+        const phoneMatch = r.phoneLast4 === verify4;
+        return schoolMatch && nameMatch && phoneMatch;
+      });
+
+      resultBox.classList.remove('hidden');
+
+      if (!matched) {
+        appState.lastQueriedStudentId = null;
+        resultBox.innerHTML = `
+          <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
+            <div class="font-bold text-sm">❌ 查無符合的報名紀錄</div>
+            <p class="text-xs mt-1 leading-relaxed">請確認「就讀學校（例如：竹圍國小）」、「學生姓名」以及「家長(監護人)手機末 4 碼」是否與報名表單填寫一致。若剛送出 Google 表單，請先點擊上方「🔄 立即更新資料」。</p>
+          </div>
+        `;
+        return;
+      }
+
+      appState.lastQueriedStudentId = matched.id;
+      renderStudentLookupCard(matched);
+    }
+
+    function renderStudentLookupCard(rec) {
+      const resultBox = document.getElementById('student-lookup-result');
+      if (!resultBox || !rec) return;
+
+      const statusBanner = rec.regStatus === '成功'
+        ? `<div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-2">
+             <div class="flex items-center gap-2.5">
+               <span class="text-xl">✅</span>
+               <div>
+                 <div class="text-sm font-bold text-emerald-900">報名成功（已錄取正取名單）</div>
+                 <div class="text-xs text-emerald-700">請核對下方 9 項報名資料；如有誤植可點擊右側「確認並修正報名資料」。</div>
+               </div>
+             </div>
+             <button type="button" onclick="openDataCorrectionModal('${rec.id}', 'student')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition">
+               ✏️ 確認並修正報名資料
+             </button>
+           </div>`
+        : rec.regStatus === '審核中'
+        ? `<div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-wrap items-center justify-between gap-2">
+             <div class="flex items-center gap-2.5">
+               <span class="text-xl">⚠️</span>
+               <div>
+                 <div class="text-sm font-bold text-amber-900">⚠️ 審核中</div>
+                 <div class="text-xs text-amber-800">${rec.failReason ? `審核備註：${escapeHtml(rec.failReason)}` : '主辦單位正在審核報名資料，您仍可先核對並修正下方基本資料。'}</div>
+               </div>
+             </div>
+             <button type="button" onclick="openDataCorrectionModal('${rec.id}', 'student')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-xs transition">
+               ✏️ 確認並修正報名資料
+             </button>
+           </div>`
+        : `<div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex flex-wrap items-center justify-between gap-2">
+             <div class="flex items-center gap-2.5">
+               <span class="text-xl">❌</span>
+               <div>
+                 <div class="text-sm font-bold text-rose-900">報名失敗 / 未錄取</div>
+                 <div class="text-xs text-rose-700">原因說明：${escapeHtml(rec.failReason || '未符合錄取條件或重複報名')}</div>
+               </div>
+             </div>
+             <button type="button" onclick="openDataCorrectionModal('${rec.id}', 'student')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition">
+               ✏️ 檢視／修正資料
+             </button>
+           </div>`;
+
+      resultBox.innerHTML = `
+        <div class="space-y-4 animate-fade-up">
+          ${statusBanner}
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-5 rounded-2xl bg-slate-50 border border-slate-200 text-sm">
+            <div><span class="text-xs text-slate-500 block">1. 學生姓名</span><span class="font-bold text-slate-900">${escapeHtml(rec.studentName)}</span></div>
+            <div><span class="text-xs text-slate-500 block">2. 學生生日</span><span class="font-semibold text-slate-800">${escapeHtml(rec.studentDob || '')}</span></div>
+            <div><span class="text-xs text-slate-500 block">3. 學生身份證字號</span><span class="font-mono font-semibold text-slate-800">${escapeHtml(rec.studentId ? maskIdNumber(rec.studentId) : '')}</span></div>
+            <div><span class="text-xs text-slate-500 block">4. 家長(監護人)姓名</span><span class="font-semibold text-slate-800">${escapeHtml(rec.guardianName || '')}</span></div>
+            <div><span class="text-xs text-slate-500 block">5. 家長(監護人)生日</span><span class="font-semibold text-slate-800">${escapeHtml(rec.guardianDob || '')}</span></div>
+            <div><span class="text-xs text-slate-500 block">6. 家長(監護人)身份證字號</span><span class="font-mono font-semibold text-slate-800">${escapeHtml(rec.guardianId ? maskIdNumber(rec.guardianId) : '')}</span></div>
+            <div><span class="text-xs text-slate-500 block">7. 家長(監護人)手機</span><span class="font-semibold text-slate-800">${escapeHtml(rec.phone || '')}</span></div>
+            <div><span class="text-xs text-slate-500 block">8. 餐別/餐食選擇</span><span class="font-bold ${rec.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${rec.meal === '素' ? '🥬 素食' : '🍗 葷食'}</span></div>
+            <div><span class="text-xs text-slate-500 block">9. 班級（就讀學校／座號）</span><span class="font-semibold text-slate-800">${escapeHtml(formatGradeClassSeat(rec, true))}</span></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="p-3.5 rounded-2xl border border-slate-200 bg-white flex items-center justify-between">
+              <span class="font-bold text-slate-700">📅 12/25（五）第一天狀態</span>
+              <span class="font-semibold ${rec.d1CheckedIn ? 'text-emerald-700' : 'text-slate-500'}">
+                ${rec.d1CheckedIn ? `✅ 已報到 (${rec.d1CheckinTime || '現場'})` : '⏳ 尚未報到'} ・ ${rec.d1MealPicked ? '🍱 已領餐' : '尚未領餐'}
+              </span>
+            </div>
+            <div class="p-3.5 rounded-2xl border border-slate-200 bg-white flex items-center justify-between">
+              <span class="font-bold text-slate-700">📅 12/26（六）第二天狀態</span>
+              <span class="font-semibold ${rec.d2CheckedIn ? 'text-emerald-700' : 'text-slate-500'}">
+                ${rec.d2CheckedIn ? `✅ 已報到 (${rec.d2CheckinTime || '現場'})` : '⏳ 尚未報到'} ・ ${rec.d2MealPicked ? '🍱 已領餐' : '尚未領餐'}
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetStudentLookup() {
+      document.getElementById('student-lookup-form').reset();
+      const res = document.getElementById('student-lookup-result');
+      res.classList.add('hidden');
+      res.innerHTML = '';
+      appState.lastQueriedStudentId = null;
+    }
+
+    // =========================================================================
+    // 8. 分頁 1B：各校查詢專區（含姓名保護版 & 完整版 Excel 下載）
+    // =========================================================================
+    function handleSchoolLookup(e) {
+      e.preventDefault();
+      const code = document.getElementById('school-code-input').value.trim();
+      appState.lastQueriedSchoolCode = code;
+      renderSchoolLookupResult(code);
+    }
+
+    function renderSchoolLookupResult(code) {
+      const resultBox = document.getElementById('school-lookup-result');
+      if (!resultBox) return;
+      resultBox.classList.remove('hidden');
+
+      const primarySchoolName = CODE_TO_PRIMARY_SCHOOL[code];
+      if (!primarySchoolName) {
+        resultBox.innerHTML = `
+          <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
+            <div class="font-bold text-sm">❌ 查無此學校代碼（${escapeHtml(code)}）</div>
+            <p class="text-xs mt-1">請確認您輸入的是教育部國教署 6 碼學校代碼（例如：000000）。</p>
+          </div>
+        `;
+        return;
+      }
+
+      const schoolRecords = appState.records
+        .filter(r => r.schoolCode === code || normalizeSchoolName(r.schoolName) === normalizeSchoolName(primarySchoolName))
+        .sort(compareStudentsForRoster);
+
+      const okCount = schoolRecords.filter(r => r.regStatus === '成功').length;
+      const pendingCount = schoolRecords.filter(r => r.regStatus === '審核中').length;
+      const failCount = schoolRecords.filter(r => r.regStatus === '失敗').length;
+
+      resultBox.innerHTML = `
+        <div class="space-y-4 animate-fade-up">
+          <div class="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white text-xs font-mono font-bold">${escapeHtml(code)}</span>
+                <h3 class="text-lg font-bold text-slate-900">${escapeHtml(primarySchoolName)} 報名清冊</h3>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-slate-700">
+                <span>總報名：${schoolRecords.length} 人</span>
+                <span class="text-emerald-700">✅ 報名成功：${okCount} 人</span>
+                <span class="text-amber-700">⚠️ 審核中：${pendingCount} 人</span>
+                <span class="text-rose-700">❌ 報名失敗：${failCount} 人</span>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="downloadSchoolExcel('${escapeHtml(code)}', 'masked')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                <span>🛡️</span>
+                <span>下載 Excel（姓名保護版）</span>
+              </button>
+              <button type="button" onclick="downloadSchoolExcel('${escapeHtml(code)}', 'full')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                <span>📊</span>
+                <span>下載 Excel（完整版）</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+              <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
+                <tr>
+                  <th class="px-4 py-3 text-left">序</th>
+                  <th class="px-4 py-3 text-left">報名狀態</th>
+                  <th class="px-4 py-3 text-left">學生姓名</th>
+                  <th class="px-4 py-3 text-left">年級／班級／座號</th>
+                  <th class="px-4 py-3 text-left">餐別/餐食選擇</th>
+                  <th class="px-4 py-3 text-left">家長(監護人)姓名</th>
+                  <th class="px-4 py-3 text-left">家長(監護人)手機</th>
+                  <th class="px-4 py-3 text-left">兩日報到進度</th>
+                  <th class="px-4 py-3 text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 bg-white">
+                ${schoolRecords.length === 0
+                  ? `<tr><td colspan="9" class="px-4 py-8 text-center text-xs text-slate-500">目前尚無 ${escapeHtml(primarySchoolName)} 的報名資料。</td></tr>`
+                  : schoolRecords.map((r, i) => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="px-4 py-3 text-xs text-slate-500">${i + 1}</td>
+                      <td class="px-4 py-3">
+                        ${getRegStatusBadgeHtml(r.regStatus)}
+                        ${r.failReason ? `<div class="text-[11px] text-rose-600 mt-1">${escapeHtml(r.failReason)}</div>` : ''}
+                      </td>
+                      <td class="px-4 py-3 font-bold text-slate-900">${escapeHtml(maskName(r.studentName))}</td>
+                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(formatGradeClassSeat(r, false))}</td>
+                      <td class="px-4 py-3 text-xs font-semibold ${r.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${r.meal === '素' ? '🥬 素食' : '🍗 葷食'}</td>
+                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(r.guardianName || '')}</td>
+                      <td class="px-4 py-3 text-xs font-mono text-slate-700">${escapeHtml(r.phone || '')}</td>
+                      <td class="px-4 py-3 text-xs text-slate-600">
+                        <div>12/25：${r.d1CheckedIn ? `✅ (${r.d1CheckinTime || '已到'})` : '⏳ 未到'}</div>
+                        <div>12/26：${r.d2CheckedIn ? `✅ (${r.d2CheckinTime || '已到'})` : '⏳ 未到'}</div>
+                      </td>
+                      <td class="px-4 py-3 text-right">
+                        <button type="button" onclick="openDataCorrectionModal('${r.id}', 'school')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition">
+                          ✏️ 修正資料
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function downloadSchoolExcel(code, version) {
+      const primarySchoolName = CODE_TO_PRIMARY_SCHOOL[code] || code;
+      const records = appState.records
+        .filter(r => r.schoolCode === code || normalizeSchoolName(r.schoolName) === normalizeSchoolName(primarySchoolName))
+        .sort(compareStudentsForRoster);
+
+      if (records.length === 0) {
+        showToast('目前該校無報名資料可匯出', 'warning');
+        return;
+      }
+
+      const isMasked = version === 'masked';
+      const rowsData = records.map((r, idx) => {
+        if (isMasked) {
+          return {
+            '序號': idx + 1,
+            '報名狀態': r.regStatus === '成功' ? '報名成功' : r.regStatus === '審核中' ? '審核中' : '報名失敗',
+            '就讀學校': r.schoolName,
+            '年級': r.gradeLevel,
+            '班級': r.classDisplay,
+            '座號': r.seatDisplay || '',
+            '學生姓名（保護版）': maskName(r.studentName),
+            '餐別/餐食選擇': r.meal === '素' ? '素食' : '葷食',
+            '12/25報到狀態': r.d1CheckedIn ? `已報到 (${r.d1CheckinTime || ''})` : '未報到',
+            '12/26報到狀態': r.d2CheckedIn ? `已報到 (${r.d2CheckinTime || ''})` : '未報到',
+            '備註/失敗原因': r.failReason || ''
+          };
+        }
+        return {
+          '序號': idx + 1,
+          '報名狀態': r.regStatus === '成功' ? '報名成功' : r.regStatus === '審核中' ? '審核中' : '報名失敗',
+          '就讀學校': r.schoolName,
+          '年級': r.gradeLevel,
+          '班級': r.classDisplay,
+          '座號': r.seatDisplay || '',
+          '學生姓名': r.studentName,
+          '餐別/餐食選擇': r.meal === '素' ? '素食' : '葷食',
+          '家長(監護人)姓名': r.guardianName || '',
+          '家長(監護人)手機': r.phone || '',
+          '12/25報到狀態': r.d1CheckedIn ? `已報到 (${r.d1CheckinTime || ''})` : '未報到',
+          '12/26報到狀態': r.d2CheckedIn ? `已報到 (${r.d2CheckinTime || ''})` : '未報到',
+          '備註/失敗原因': r.failReason || ''
+        };
+      });
+
+      const fileLabel = isMasked ? '姓名保護版' : '完整版';
+      const fileName = `${primarySchoolName}_科學實驗營隊名冊_${fileLabel}.xlsx`;
+
+      if (window.XLSX) {
+        const ws = XLSX.utils.json_to_sheet(rowsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, fileLabel);
+        XLSX.writeFile(wb, fileName);
+        showToast(`✅ 已下載「${fileName}」`, 'success');
+      } else {
+        const headers = Object.keys(rowsData[0]);
+        const csvLines = [headers.join(',')].concat(
+          rowsData.map(row => headers.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(','))
+        );
+        const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName.replace(/\.xlsx$/, '.csv');
+        link.click();
+        showToast(`✅ 已匯出「${fileName.replace(/\.xlsx$/, '.csv')}」`, 'success');
+      }
+    }
+
+    // =========================================================================
+    // 9. 資料修正彈窗（學生/家長、各校、管理員共用）
+    // =========================================================================
+    function openDataCorrectionModal(recordId, sourceMode) {
+      const rec = appState.records.find(r => r.id === recordId);
+      if (!rec) return;
+
+      document.getElementById('corr-record-id').value = rec.id;
+      document.getElementById('corr-source-mode').value = sourceMode;
+      document.getElementById('corr-student-name').value = rec.studentName;
+      document.getElementById('corr-school-name').value = rec.schoolName;
+      document.getElementById('corr-class-input').value = rec.classDisplay;
+      document.getElementById('corr-seat-input').value = rec.seatDisplay;
+      document.getElementById('corr-meal-select').value = rec.meal;
+      document.getElementById('corr-guardian-name').value = rec.guardianName;
+      document.getElementById('corr-phone-input').value = rec.phone;
+      document.getElementById('corr-student-id').value = rec.studentId;
+      document.getElementById('corr-student-dob').value = rec.studentDob;
+      document.getElementById('corr-guardian-id').value = rec.guardianId;
+      document.getElementById('corr-guardian-dob').value = rec.guardianDob;
+
+      const modal = document.getElementById('data-correction-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeDataCorrectionModal() {
+      const modal = document.getElementById('data-correction-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function saveDataCorrection(e) {
+      e.preventDefault();
+      const id = document.getElementById('corr-record-id').value;
+      const rec = appState.records.find(r => r.id === id);
+      if (!rec) return;
+
+      const prevName = rec.originalStudentName || rec.studentName;
+      rec.studentName = document.getElementById('corr-student-name').value.trim();
+      rec.schoolName = normalizeSchoolName(document.getElementById('corr-school-name').value.trim());
+      rec.schoolCode = getSchoolCode(rec.schoolName);
+      const rawClass = cleanOptionalField(document.getElementById('corr-class-input').value);
+      rec.gradeLevel = inferGradeLevel(rec.schoolName, rawClass, '');
+      rec.classDisplay = formatClassForSchoolRoster(rawClass, rec.gradeLevel);
+      rec.seatDisplay = formatSeatForSchoolRoster(cleanOptionalField(document.getElementById('corr-seat-input').value));
+      rec.meal = document.getElementById('corr-meal-select').value;
+      rec.guardianName = cleanOptionalField(document.getElementById('corr-guardian-name').value);
+      rec.phone = cleanOptionalField(document.getElementById('corr-phone-input').value);
+      rec.phoneLast4 = getPhoneLast4(rec.phone);
+      rec.studentId = cleanOptionalField(document.getElementById('corr-student-id').value).toUpperCase();
+      rec.studentDob = cleanOptionalField(document.getElementById('corr-student-dob').value);
+      rec.guardianId = cleanOptionalField(document.getElementById('corr-guardian-id').value).toUpperCase();
+      rec.guardianDob = cleanOptionalField(document.getElementById('corr-guardian-dob').value);
+
+      closeDataCorrectionModal();
+      populateSchoolDropdowns();
+      syncAllViews(rec.id);
+
+      showToast('⏳ 正在將修正資料寫回 Google Sheet...', 'info');
+      const res = await pushRowUpdateToAppsScript(rec, prevName);
+      if (res.ok) {
+        rec.originalStudentName = rec.studentName;
+        showToast(`✅ 已更新「${rec.studentName}」資料並同步寫回 Google Sheet！`, 'success');
+      } else {
+        showToast('⚠️ 畫面已更新，但寫回 Google Sheet 時發生連線異常', 'warning');
+      }
+    }
+
+    // =========================================================================
+    // 10. 分頁 2：活動當天點名報到（自助報到 & 工作人員戰情室 & 未報到名單）
+    // =========================================================================
+    function switchCheckinSubView(sub) {
+      appState.checkinSubView = sub;
+      const btnSelf = document.getElementById('btn-sub-self');
+      const btnStaff = document.getElementById('btn-sub-staff');
+      const viewSelf = document.getElementById('subview-self-checkin');
+      const viewStaff = document.getElementById('subview-staff-dashboard');
+
+      if (sub === 'self') {
+        btnSelf.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 text-white shadow-sm transition';
+        btnStaff.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition';
+        viewSelf.classList.remove('hidden');
+        viewStaff.classList.add('hidden');
+      } else {
+        btnStaff.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-900 text-white shadow-sm transition';
+        btnSelf.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition';
+        viewStaff.classList.remove('hidden');
+        viewSelf.classList.add('hidden');
+        if (appState.staffUnlocked) renderStaffDashboard();
+      }
+    }
+
+    async function handleSelfCheckin(e) {
+      e.preventDefault();
+      const school = document.getElementById('ci-school').value;
+      const grade = document.getElementById('ci-grade').value;
+      const name = document.getElementById('ci-name').value.trim();
+      const feedback = document.getElementById('ci-feedback');
+      const isD1 = appState.activeDay === 'd1';
+      const dayTitle = isD1 ? '12/25（五）第一天' : '12/26（六）第二天';
+
+      const matched = appState.records.find(r =>
+        normalizeSchoolName(r.schoolName) === normalizeSchoolName(school) &&
+        (!r.gradeLevel || r.gradeLevel === grade) &&
+        r.studentName.replace(/\s+/g, '') === name.replace(/\s+/g, '')
+      );
+
+      feedback.classList.remove('hidden');
+
+      if (!matched) {
+        feedback.innerHTML = `
+          <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
+            <div class="font-bold text-sm">❌ 查無符合的學員名單</div>
+            <p class="text-xs mt-1">請確認「就讀學校」、「年級」與「學生姓名」是否正確，或請現場報到台工作人員協助查詢。</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (matched.regStatus === '審核中') {
+        feedback.innerHTML = `
+          <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900">
+            <div class="font-bold text-sm">⚠️ 尚在審核中（無法自助報到）</div>
+            <p class="text-xs mt-1">學員「${escapeHtml(matched.studentName)}」目前報名狀態為「⚠️ 審核中」，請洽現場服務台工作人員確認。</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (matched.regStatus !== '成功') {
+        feedback.innerHTML = `
+          <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
+            <div class="font-bold text-sm">❌ 此學員報名未成功</div>
+            <p class="text-xs mt-1">原因：${escapeHtml(matched.failReason || '未錄取')}，請洽現場服務台確認。</p>
+          </div>
+        `;
+        return;
+      }
+
+      const nowTime = getCurrentTimeHHMM();
+      if (isD1) {
+        if (!matched.d1CheckedIn) {
+          matched.d1CheckedIn = true;
+          matched.d1CheckinTime = nowTime;
+          await pushRowUpdateToAppsScript(matched);
+        }
+      } else {
+        if (!matched.d2CheckedIn) {
+          matched.d2CheckedIn = true;
+          matched.d2CheckinTime = nowTime;
+          await pushRowUpdateToAppsScript(matched);
+        }
+      }
+
+      syncAllViews(matched.id);
+      const timeUsed = isD1 ? matched.d1CheckinTime : matched.d2CheckinTime;
+
+      feedback.innerHTML = `
+        <div class="p-6 rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 shadow-sm animate-fade-up">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold">✅ ${dayTitle} 報到成功</span>
+              <h3 class="text-xl font-bold text-slate-900 mt-2">${escapeHtml(matched.studentName)} 同學，歡迎報到！</h3>
+              <p class="text-xs text-slate-600 mt-0.5">${escapeHtml(formatGradeClassSeat(matched, true))}（簽到時間：${escapeHtml(timeUsed)}）</p>
+            </div>
+            <div class="px-5 py-3 rounded-2xl bg-white border border-emerald-200 text-center shadow-xs">
+              <div class="text-[11px] font-semibold text-slate-500">當日餐別/餐食選擇憑證</div>
+              <div class="text-lg font-extrabold ${matched.meal === '素' ? 'text-emerald-700' : 'text-orange-700'} mt-0.5">
+                ${matched.meal === '素' ? '🥬 素食便當' : '🍗 葷食便當'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetSelfCheckinForm() {
+      document.getElementById('self-checkin-form').reset();
+      const fb = document.getElementById('ci-feedback');
+      fb.classList.add('hidden');
+      fb.innerHTML = '';
+    }
+
+    function unlockStaffDashboard(e) {
+      e.preventDefault();
+      const input = document.getElementById('staff-pwd-input');
+      const err = document.getElementById('staff-pwd-error');
+      if (input.value.trim() === ADMIN_PASSWORD) {
+        appState.staffUnlocked = true;
+        err.classList.add('hidden');
+        input.value = '';
+        document.getElementById('staff-lock-screen').classList.add('hidden');
+        document.getElementById('staff-unlocked-content').classList.remove('hidden');
+        renderStaffDashboard();
+        showToast('已解鎖工作人員報到戰情室', 'success');
+      } else {
+        err.classList.remove('hidden');
+      }
+    }
+
+    function lockStaffDashboard() {
+      appState.staffUnlocked = false;
+      document.getElementById('staff-lock-screen').classList.remove('hidden');
+      document.getElementById('staff-unlocked-content').classList.add('hidden');
+      showToast('已鎖定工作人員報到戰情室', 'info');
+    }
+
+    function renderStaffDashboard(highlightId = null) {
+      if (!appState.staffUnlocked) return;
+      const isD1 = appState.activeDay === 'd1';
+      const approved = appState.records.filter(r => r.regStatus === '成功').sort(compareStudentsForRoster);
+      const checkedInCount = approved.filter(r => isD1 ? r.d1CheckedIn : r.d2CheckedIn).length;
+      const unarrivedCount = approved.length - checkedInCount;
+      const rate = approved.length > 0 ? Math.round((checkedInCount / approved.length) * 100) : 0;
+
+      document.getElementById('kpi-expected').textContent = approved.length;
+      document.getElementById('kpi-checked-in').textContent = checkedInCount;
+      document.getElementById('kpi-unarrived').textContent = unarrivedCount;
+      document.getElementById('kpi-rate-text').textContent = `${rate}%`;
+      document.getElementById('kpi-rate-bar').style.width = `${rate}%`;
+
+      const schoolFilter = document.getElementById('dash-filter-school')?.value || 'ALL';
+      const statusFilter = document.getElementById('dash-filter-status')?.value || 'ALL';
+      const keyword = (document.getElementById('dash-search-input')?.value || '').trim().toLowerCase();
+
+      const filtered = approved.filter(r => {
+        const arrived = isD1 ? r.d1CheckedIn : r.d2CheckedIn;
+        if (schoolFilter !== 'ALL' && r.schoolName !== schoolFilter) return false;
+        if (statusFilter === 'ARRIVED' && !arrived) return false;
+        if (statusFilter === 'UNARRIVED' && arrived) return false;
+        if (keyword && !`${r.studentName} ${r.schoolName} ${r.gradeLevel} ${r.classDisplay}`.toLowerCase().includes(keyword)) return false;
+        return true;
+      });
+
+      const tbody = document.getElementById('staff-roster-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = filtered.length === 0
+        ? `<tr><td colspan="7" class="px-4 py-8 text-center text-xs text-slate-500">無符合篩選條件的學員名單。</td></tr>`
+        : filtered.map((r, idx) => {
+            const arrived = isD1 ? r.d1CheckedIn : r.d2CheckedIn;
+            const timeStr = isD1 ? r.d1CheckinTime : r.d2CheckinTime;
+            return `
+              <tr class="${highlightId === r.id ? 'row-flash' : ''} hover:bg-slate-50">
+                <td class="px-4 py-3 text-xs text-slate-500">${idx + 1}</td>
+                <td class="px-4 py-3 text-xs font-semibold text-slate-800">${escapeHtml(r.schoolName)}</td>
+                <td class="px-4 py-3 text-xs text-slate-600">${escapeHtml(formatGradeClassSeat(r, false))}</td>
+                <td class="px-4 py-3 font-bold text-slate-900">${escapeHtml(r.studentName)}</td>
+                <td class="px-4 py-3 text-xs font-semibold ${r.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${r.meal === '素' ? '🥬 素食' : '🍗 葷食'}</td>
+                <td class="px-4 py-3 text-xs">
+                  ${arrived
+                    ? `<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">✅ 已報到 ${escapeHtml(timeStr)}</span>`
+                    : `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-semibold">⏳ 尚未報到</span>`}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <button type="button" onclick="toggleStaffCheckin('${r.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${arrived ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'}">
+                    ${arrived ? '取消報到' : '✅ 標記已報到'}
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+    }
+
+    async function toggleStaffCheckin(recordId) {
+      const rec = appState.records.find(r => r.id === recordId);
+      if (!rec) return;
+      const isD1 = appState.activeDay === 'd1';
+      const nowTime = getCurrentTimeHHMM();
+
+      if (isD1) {
+        rec.d1CheckedIn = !rec.d1CheckedIn;
+        rec.d1CheckinTime = rec.d1CheckedIn ? nowTime : '';
+        if (!rec.d1CheckedIn) {
+          rec.d1MealPicked = false;
+          rec.d1MealTime = '';
+        }
+      } else {
+        rec.d2CheckedIn = !rec.d2CheckedIn;
+        rec.d2CheckinTime = rec.d2CheckedIn ? nowTime : '';
+        if (!rec.d2CheckedIn) {
+          rec.d2MealPicked = false;
+          rec.d2MealTime = '';
+        }
+      }
+
+      syncAllViews(rec.id);
+      if (!document.getElementById('unarrived-list-modal').classList.contains('hidden')) {
+        renderUnarrivedModalContent();
+      }
+
+      const stateLabel = (isD1 ? rec.d1CheckedIn : rec.d2CheckedIn) ? '已完成報到' : '已取消報到';
+      showToast(`✅ ${rec.studentName} ${stateLabel}，正在同步寫回 Google Sheet...`, 'success');
+      await pushRowUpdateToAppsScript(rec);
+    }
+
+    // 彈窗 3：尚未報到名單（姓名、學校、班級、監護人連絡電話）
+    function openUnarrivedListModal() {
+      const modal = document.getElementById('unarrived-list-modal');
+      const searchInput = document.getElementById('unarrived-modal-search');
+      if (searchInput) searchInput.value = '';
+      renderUnarrivedModalContent();
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeUnarrivedListModal() {
+      const modal = document.getElementById('unarrived-list-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function renderUnarrivedModalContent() {
+      const isD1 = appState.activeDay === 'd1';
+      const dayText = isD1 ? '12/25（五）第一天' : '12/26（六）第二天';
+      const badge = document.getElementById('unarrived-modal-day-badge');
+      if (badge) badge.textContent = dayText;
+
+      const keyword = (document.getElementById('unarrived-modal-search')?.value || '').trim().toLowerCase();
+      const unarrived = appState.records
+        .filter(r => r.regStatus === '成功' && !(isD1 ? r.d1CheckedIn : r.d2CheckedIn))
+        .sort(compareStudentsForRoster);
+
+      const subtitle = document.getElementById('unarrived-modal-subtitle');
+      if (subtitle) {
+        subtitle.textContent = `共 ${unarrived.length} 位錄取學員尚未完成報到（點擊電話號碼可直接撥打聯繫）`;
+      }
+
+      const filtered = unarrived.filter(r => {
+        if (!keyword) return true;
+        return `${r.studentName} ${r.schoolName} ${r.classDisplay} ${r.gradeLevel} ${r.phone}`.toLowerCase().includes(keyword);
+      });
+
+      const tbody = document.getElementById('unarrived-modal-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = filtered.length === 0
+        ? `<tr><td colspan="6" class="px-4 py-8 text-center text-xs text-slate-500">${unarrived.length === 0 ? '🎉 太棒了！本日所有錄取學員皆已完成報到！' : '無符合搜尋關鍵字的學員。'}</td></tr>`
+        : filtered.map((r, i) => {
+            const classText = formatGradeClassSeat(r, false);
+            const telHref = r.phone ? `tel:${r.phone.replace(/[^\d+]/g, '')}` : '';
+            return `
+              <tr class="hover:bg-amber-50/40">
+                <td class="px-4 py-3 text-xs text-slate-500">${i + 1}</td>
+                <td class="px-4 py-3 font-bold text-slate-900">${escapeHtml(r.studentName)}</td>
+                <td class="px-4 py-3 text-xs font-semibold text-slate-700">${escapeHtml(r.schoolName)}</td>
+                <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(classText)}</td>
+                <td class="px-4 py-3 text-xs font-mono">
+                  ${r.phone
+                    ? `<a href="${telHref}" class="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 font-bold underline">📞 ${escapeHtml(r.phone)}</a>`
+                    : ``}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <button type="button" onclick="toggleStaffCheckin('${r.id}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">
+                    ✅ 補標記報到
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+    }
+
+    // =========================================================================
+    // 11. 分頁 3：餐飲查詢與領餐核銷（密碼 12251226 & 葷/素未領取名單彈窗）
+    // =========================================================================
+    function unlockMealsPanel(e) {
+      e.preventDefault();
+      const input = document.getElementById('meals-pwd-input');
+      const err = document.getElementById('meals-pwd-error');
+      if (input.value.trim() === ADMIN_PASSWORD) {
+        appState.mealsUnlocked = true;
+        err.classList.add('hidden');
+        input.value = '';
+        document.getElementById('meals-lock-screen').classList.add('hidden');
+        document.getElementById('meals-unlocked-content').classList.remove('hidden');
+        renderMealsPanel();
+        showToast('已解鎖餐飲查詢與領餐核銷', 'success');
+      } else {
+        err.classList.remove('hidden');
+      }
+    }
+
+    function lockMealsPanel() {
+      appState.mealsUnlocked = false;
+      document.getElementById('meals-lock-screen').classList.remove('hidden');
+      document.getElementById('meals-unlocked-content').classList.add('hidden');
+      showToast('已鎖定餐飲查詢與領餐核銷', 'info');
+    }
+
+    function renderMealsPanel(highlightId = null) {
+      if (!appState.mealsUnlocked) return;
+      const isD1 = appState.activeDay === 'd1';
+
+      const approved = appState.records.filter(r => r.regStatus === '成功');
+      const arrived = approved.filter(r => isD1 ? r.d1CheckedIn : r.d2CheckedIn).sort(compareStudentsForRoster);
+
+      const meatAll = approved.filter(r => r.meal === '葷');
+      const vegAll = approved.filter(r => r.meal === '素');
+
+      const meatArrived = arrived.filter(r => r.meal === '葷');
+      const vegArrived = arrived.filter(r => r.meal === '素');
+
+      const meatPicked = meatArrived.filter(r => isD1 ? r.d1MealPicked : r.d2MealPicked);
+      const vegPicked = vegArrived.filter(r => isD1 ? r.d1MealPicked : r.d2MealPicked);
+
+      const meatUnpickedCount = meatArrived.length - meatPicked.length;
+      const vegUnpickedCount = vegArrived.length - vegPicked.length;
+      const totalPicked = meatPicked.length + vegPicked.length;
+      const overallPct = arrived.length > 0 ? Math.round((totalPicked / arrived.length) * 100) : 0;
+
+      document.getElementById('meal-meat-total-note').textContent = `全體錄取預訂：${meatAll.length} 份`;
+      document.getElementById('meal-meat-picked').textContent = meatPicked.length;
+      document.getElementById('meal-meat-arrived').textContent = meatArrived.length;
+      document.getElementById('meal-meat-unpicked-badge').textContent = `未領 ${meatUnpickedCount} 份・檢視名單 ↗`;
+
+      document.getElementById('meal-veg-total-note').textContent = `全體錄取預訂：${vegAll.length} 份`;
+      document.getElementById('meal-veg-picked').textContent = vegPicked.length;
+      document.getElementById('meal-veg-arrived').textContent = vegArrived.length;
+      document.getElementById('meal-veg-unpicked-badge').textContent = `未領 ${vegUnpickedCount} 份・檢視名單 ↗`;
+
+      document.getElementById('meal-overall-pct').textContent = `${overallPct}%`;
+      document.getElementById('meal-all-picked').textContent = totalPicked;
+      document.getElementById('meal-all-arrived').textContent = arrived.length;
+
+      const schoolFilter = document.getElementById('meal-filter-school')?.value || 'ALL';
+      const typeFilter = document.getElementById('meal-filter-type')?.value || 'ALL';
+      const statusFilter = document.getElementById('meal-filter-status')?.value || 'ALL';
+      const keyword = (document.getElementById('meal-search-input')?.value || '').trim().toLowerCase();
+
+      const filtered = arrived.filter(r => {
+        const picked = isD1 ? r.d1MealPicked : r.d2MealPicked;
+        if (schoolFilter !== 'ALL' && r.schoolName !== schoolFilter) return false;
+        if (typeFilter !== 'ALL' && r.meal !== typeFilter) return false;
+        if (statusFilter === 'PICKED' && !picked) return false;
+        if (statusFilter === 'UNPICKED' && picked) return false;
+        if (keyword && !`${r.studentName} ${r.schoolName} ${r.classDisplay} ${r.gradeLevel}`.toLowerCase().includes(keyword)) return false;
+        return true;
+      });
+
+      const grid = document.getElementById('meal-cards-grid');
+      if (!grid) return;
+
+      grid.innerHTML = filtered.length === 0
+        ? `<div class="col-span-full py-10 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200">目前尚無符合條件的當日已報到學員。</div>`
+        : filtered.map(r => {
+            const picked = isD1 ? r.d1MealPicked : r.d2MealPicked;
+            const mealTime = isD1 ? r.d1MealTime : r.d2MealTime;
+            const isVeg = r.meal === '素';
+            return `
+              <div class="${highlightId === r.id ? 'row-flash' : ''} p-4 rounded-2xl border-2 transition ${picked ? 'bg-slate-50/80 border-slate-200' : isVeg ? 'bg-emerald-50/30 border-emerald-200' : 'bg-orange-50/30 border-orange-200'}">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="text-xs font-semibold text-slate-500">${escapeHtml(formatGradeClassSeat(r, true))}</div>
+                    <div class="text-base font-bold text-slate-900 mt-0.5">${escapeHtml(r.studentName)}</div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-xl text-xs font-extrabold ${isVeg ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'}">
+                    ${isVeg ? '🥬 素食' : '🍗 葷食'}
+                  </span>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                  <span class="text-xs font-semibold ${picked ? 'text-emerald-700' : 'text-amber-700'}">
+                    ${picked ? `✅ 已領餐 (${escapeHtml(mealTime)})` : '⏳ 尚未領取便當'}
+                  </span>
+                  <button type="button" onclick="toggleMealPickup('${r.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${picked ? 'bg-slate-200 hover:bg-slate-300 text-slate-700' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'}">
+                    ${picked ? '取消核銷' : '🍱 確認領餐'}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+    }
+
+    async function toggleMealPickup(recordId) {
+      const rec = appState.records.find(r => r.id === recordId);
+      if (!rec) return;
+      const isD1 = appState.activeDay === 'd1';
+      const nowTime = getCurrentTimeHHMM();
+
+      if (isD1) {
+        if (!rec.d1CheckedIn) {
+          rec.d1CheckedIn = true;
+          rec.d1CheckinTime = nowTime;
+        }
+        rec.d1MealPicked = !rec.d1MealPicked;
+        rec.d1MealTime = rec.d1MealPicked ? nowTime : '';
+      } else {
+        if (!rec.d2CheckedIn) {
+          rec.d2CheckedIn = true;
+          rec.d2CheckinTime = nowTime;
+        }
+        rec.d2MealPicked = !rec.d2MealPicked;
+        rec.d2MealTime = rec.d2MealPicked ? nowTime : '';
+      }
+
+      syncAllViews(rec.id);
+      if (!document.getElementById('unpicked-meal-modal').classList.contains('hidden')) {
+        renderUnpickedMealModalContent();
+      }
+
+      const pickedNow = isD1 ? rec.d1MealPicked : rec.d2MealPicked;
+      showToast(`${pickedNow ? '🍱' : '↩️'} ${rec.studentName}（${rec.meal}食）${pickedNow ? '已完成領餐核銷' : '已取消領餐'}`, 'success');
+      await pushRowUpdateToAppsScript(rec);
+    }
+
+    // 彈窗 4：葷食／素食便當未領取名單（學生姓名、學校、年級）
+    function openUnpickedMealModal(mealType) {
+      appState.unpickedModalMealType = mealType;
+      const searchInput = document.getElementById('unpicked-modal-search');
+      if (searchInput) searchInput.value = '';
+      renderUnpickedMealModalContent();
+      const modal = document.getElementById('unpicked-meal-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeUnpickedMealModal() {
+      const modal = document.getElementById('unpicked-meal-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function renderUnpickedMealModalContent() {
+      const mealType = appState.unpickedModalMealType || '葷';
+      const isD1 = appState.activeDay === 'd1';
+      const dayText = isD1 ? '12/25（五）第一天' : '12/26（六）第二天';
+      const isVeg = mealType === '素';
+
+      const dayBadge = document.getElementById('unpicked-modal-day-badge');
+      const titleEl = document.getElementById('unpicked-modal-title');
+      if (dayBadge) dayBadge.textContent = dayText;
+      if (titleEl) {
+        titleEl.textContent = isVeg ? '🥬 素食便當未領取名單' : '🍗 葷食便當未領取名單';
+      }
+
+      const keyword = (document.getElementById('unpicked-modal-search')?.value || '').trim().toLowerCase();
+      const unpicked = appState.records
+        .filter(r => r.regStatus === '成功' && r.meal === mealType && (isD1 ? (r.d1CheckedIn && !r.d1MealPicked) : (r.d2CheckedIn && !r.d2MealPicked)))
+        .sort(compareStudentsForRoster);
+
+      const subtitle = document.getElementById('unpicked-modal-subtitle');
+      if (subtitle) {
+        subtitle.textContent = `共 ${unpicked.length} 位當日已報到學員尚未領取${isVeg ? '素食' : '葷食'}便當`;
+      }
+
+      const filtered = unpicked.filter(r => {
+        if (!keyword) return true;
+        return `${r.studentName} ${r.schoolName} ${r.gradeLevel}`.toLowerCase().includes(keyword);
+      });
+
+      const tbody = document.getElementById('unpicked-modal-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = filtered.length === 0
+        ? `<tr><td colspan="5" class="px-4 py-8 text-center text-xs text-slate-500">${unpicked.length === 0 ? `🎉 本日已報到的${isVeg ? '素食' : '葷食'}學員皆已領取完畢！` : '無符合搜尋條件的學員。'}</td></tr>`
+        : filtered.map((r, i) => `
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 text-xs text-slate-500">${i + 1}</td>
+              <td class="px-4 py-3 font-bold text-slate-900">${escapeHtml(r.studentName)}</td>
+              <td class="px-4 py-3 text-xs font-semibold text-slate-700">${escapeHtml(r.schoolName)}</td>
+              <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(r.gradeLevel || r.classDisplay || '')}</td>
+              <td class="px-4 py-3 text-right">
+                <button type="button" onclick="toggleMealPickup('${r.id}')" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+                  🍱 核銷領餐
+                </button>
+              </td>
+            </tr>
+          `).join('');
+
+      const footerNote = document.getElementById('unpicked-modal-footer-note');
+      if (footerNote) {
+        footerNote.textContent = `※ 僅統計「當日已完成報到」且餐別為「${isVeg ? '素食' : '葷食'}」之未領餐學員。`;
+      }
+    }
+
+    // =========================================================================
+    // 12. 分頁 4：Google Sheet 資料總覽 & 兩天報到領餐總表 & 狀態管理
+    // =========================================================================
+    function unlockSheetPanel(e) {
+      e.preventDefault();
+      const input = document.getElementById('sheet-pwd-input');
+      const err = document.getElementById('sheet-pwd-error');
+      if (input.value.trim() === ADMIN_PASSWORD) {
+        appState.sheetUnlocked = true;
+        err.classList.add('hidden');
+        input.value = '';
+        document.getElementById('sheet-lock-screen').classList.add('hidden');
+        document.getElementById('sheet-unlocked-content').classList.remove('hidden');
+
+        const urlInput = document.getElementById('apps-script-url-input');
+        if (urlInput) urlInput.value = appState.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL;
+        populateAppsScriptCodeBox();
+        renderSheetTable();
+
+        if (appState.openDrawerAfterUnlock) {
+          appState.openDrawerAfterUnlock = false;
+          const drawer = document.getElementById('apps-script-drawer');
+          if (drawer) drawer.classList.remove('hidden');
+        }
+        showToast('已解鎖 Google Sheet 資料總覽', 'success');
+      } else {
+        err.classList.remove('hidden');
+      }
+    }
+
+    function lockSheetPanel() {
+      appState.sheetUnlocked = false;
+      document.getElementById('sheet-lock-screen').classList.remove('hidden');
+      document.getElementById('sheet-unlocked-content').classList.add('hidden');
+      showToast('已鎖定 Google Sheet 資料總覽', 'info');
+    }
+
+    function toggleAppsScriptDrawer() {
+      const drawer = document.getElementById('apps-script-drawer');
+      if (!drawer) return;
+      drawer.classList.toggle('hidden');
+      if (!drawer.classList.contains('hidden')) {
+        const urlInput = document.getElementById('apps-script-url-input');
+        if (urlInput) urlInput.value = appState.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL;
+        populateAppsScriptCodeBox();
+      }
+    }
+
+    function saveAppsScriptUrl() {
+      const url = (document.getElementById('apps-script-url-input')?.value || '').trim();
+      appState.appsScriptUrl = url || DEFAULT_APPS_SCRIPT_URL;
+      try {
+        localStorage.setItem('ntnu_usr_apps_script_url', appState.appsScriptUrl);
+      } catch (e) {}
+      showToast('✅ 已儲存 Google Apps Script 雙向寫回網址！', 'success');
+    }
+
+    function resetDefaultAppsScriptUrl() {
+      appState.appsScriptUrl = DEFAULT_APPS_SCRIPT_URL;
+      const urlInput = document.getElementById('apps-script-url-input');
+      if (urlInput) urlInput.value = DEFAULT_APPS_SCRIPT_URL;
+      try {
+        localStorage.removeItem('ntnu_usr_apps_script_url');
+      } catch (e) {}
+      showToast('✅ 已恢復為內建強制雙向寫回網址', 'success');
+    }
+
+    async function testAppsScriptConnection() {
+      const targetUrl = (appState.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL).trim();
+      showToast('⏳ 正在測試 Google Apps Script 雙向連線...', 'info');
+      try {
+        const res = await fetch(`${targetUrl}?ping=1&_t=${Date.now()}`);
+        const text = await res.text();
+        if (res.ok) {
+          showToast('✅ 雙向連線測試成功！Apps Script 服務運作正常。', 'success');
+        } else {
+          showToast(`⚠️ 連線回應狀態碼 ${res.status}：${text.slice(0, 60)}`, 'warning');
+        }
+      } catch (err) {
+        showToast('✅ 已送出測試請求至 Apps Script（若試算表可正常寫回即代表設定完成）', 'info');
+      }
+    }
+
+    function getAppsScriptSourceCode() {
+      return `/**
+ * 臺師大USR國中小自然科學實驗營隊｜Google Sheet (gid=101988920) 雙向寫回接口
+ */
+const TARGET_GID = 101988920;
+
+function getTargetSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
+  for (let i = 0; i < sheets.length; i++) {
+    if (sheets[i].getSheetId() === TARGET_GID) return sheets[i];
+  }
+  return sheets[0];
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, message: 'NTNU USR Writeback Endpoint Active' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
+    const data = JSON.parse(raw);
+    const sheet = getTargetSheet_();
+    const lastRow = sheet.getLastRow();
+    const lastCol = Math.max(sheet.getLastColumn(), 16);
+
+    const headers = sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0];
+    const displayRows = lastRow >= 2 ? sheet.getRange(2, 1, lastRow - 1, lastCol).getDisplayValues() : [];
+
+    // 定位目標資料列（優先比對時間戳記 + 原學生姓名，其次比對原學生姓名與列號）
+    let targetRow = -1;
+    const hints = data.colHints || {};
+    const nameColIdx = (hints.studentNameCol && hints.studentNameCol > 0) ? hints.studentNameCol - 1 : 3;
+
+    if (data.timestamp) {
+      for (let r = 0; r < displayRows.length; r++) {
+        const rowTs = String(displayRows[r][0] || '').trim();
+        const rowName = String(displayRows[r][nameColIdx] || '').trim();
+        if (rowTs === String(data.timestamp).trim() && (!data.originalStudentName || rowName === data.originalStudentName)) {
+          targetRow = r + 2;
+          break;
+        }
+      }
+    }
+    if (targetRow === -1 && data.rowNumber >= 2 && data.rowNumber <= lastRow) {
+      const checkName = String(displayRows[data.rowNumber - 2][nameColIdx] || '').trim();
+      if (!data.originalStudentName || checkName === data.originalStudentName) {
+        targetRow = data.rowNumber;
+      }
+    }
+    if (targetRow === -1 && data.originalStudentName) {
+      for (let r = 0; r < displayRows.length; r++) {
+        if (String(displayRows[r][nameColIdx] || '').trim() === data.originalStudentName) {
+          targetRow = r + 2;
+          break;
+        }
+      }
+    }
+
+    if (targetRow === -1) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ ok: false, error: 'ROW_NOT_FOUND' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const ensureHeaderCol = (hintCol, regex, defaultTitle, fallbackCol) => {
+      if (hintCol && hintCol > 0) return hintCol;
+      for (let c = 0; c < headers.length; c++) {
+        if (regex.test(String(headers[c] || '').replace(/\\s+/g, ''))) return c + 1;
+      }
+      if (fallbackCol && fallbackCol > 0 && fallbackCol <= sheet.getLastColumn()) return fallbackCol;
+      const newCol = sheet.getLastColumn() + 1;
+      sheet.getRange(1, newCol).setValue(defaultTitle);
+      headers.push(defaultTitle);
+      return newCol;
+    };
+
+    const setVal = (col1Based, val) => {
+      if (col1Based && col1Based > 0 && val !== undefined) {
+        sheet.getRange(targetRow, col1Based).setValue(val);
+      }
+    };
+
+    setVal(ensureHeaderCol(hints.regStatusCol, /報名狀態|錄取狀態|審核狀態/, '報名狀態', 2), data.regStatus);
+    setVal(ensureHeaderCol(hints.failReasonCol, /失敗原因|備註|審核說明/, '失敗原因', 3), data.failReason || '');
+    setVal(ensureHeaderCol(hints.studentNameCol, /學生姓名|學員姓名/, '學生姓名', 4), data.studentName);
+    setVal(ensureHeaderCol(hints.studentIdCol, /學生身分證|學生身份證/, '學生身份證字號', 5), data.studentId);
+    setVal(ensureHeaderCol(hints.studentDobCol, /學生生日|學生出生/, '學生生日', 6), data.studentDob);
+    setVal(ensureHeaderCol(hints.guardianNameCol, /監護人姓名|家長姓名/, '家長(監護人)姓名', 7), data.guardianName);
+    setVal(ensureHeaderCol(hints.guardianIdCol, /監護人身分證|監護人身份證|家長身分證|家長身份證/, '家長(監護人)身份證字號', 8), data.guardianId);
+    setVal(ensureHeaderCol(hints.guardianDobCol, /監護人生日|家長生日/, '家長(監護人)生日', 9), data.guardianDob);
+    setVal(ensureHeaderCol(hints.phoneCol, /手機|聯絡電話|電話/, '家長(監護人)手機', 10), data.phone);
+
+    if (hints.schoolCol > 0 && (!hints.classCol || hints.classCol < 0)) {
+      setVal(hints.schoolCol, data.combinedSchoolClassSeat || data.schoolName);
+    } else {
+      setVal(ensureHeaderCol(hints.schoolCol, /就讀學校|學校/, '就讀學校', 11), data.schoolName);
+      if (hints.gradeCol > 0) setVal(hints.gradeCol, data.gradeLevel);
+      if (hints.classCol > 0) setVal(hints.classCol, data.classDisplay);
+      if (hints.seatCol > 0) setVal(hints.seatCol, data.seatDisplay);
+    }
+
+    const mealCol = ensureHeaderCol(hints.mealCol, /餐別|餐食|用餐|午餐|葷素|素食/, '餐別/餐食選擇', 12);
+    const mealHeader = String(headers[mealCol - 1] || '');
+    const mealOut = /是否吃素/.test(mealHeader) ? (data.meal === '素' ? '是' : '否') : data.meal;
+    setVal(mealCol, mealOut);
+
+    setVal(ensureHeaderCol(hints.d1CiCol, /12\\/25.*報到|第一天.*報到/, '12/25 報到狀態', 13), data.d1CheckedIn);
+    setVal(ensureHeaderCol(hints.d1MealCol, /12\\/25.*領餐|第一天.*領餐/, '12/25 領餐狀態', 14), data.d1MealPicked);
+    setVal(ensureHeaderCol(hints.d2CiCol, /12\\/26.*報到|第二天.*報到/, '12/26 報到狀態', 15), data.d2CheckedIn);
+    setVal(ensureHeaderCol(hints.d2MealCol, /12\\/26.*領餐|第二天.*領餐/, '12/26 領餐狀態', 16), data.d2MealPicked);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true, updatedRow: targetRow }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}`;
+    }
+
+    function populateAppsScriptCodeBox() {
+      const box = document.getElementById('apps-script-code-box');
+      if (box) box.textContent = getAppsScriptSourceCode();
+    }
+
+    async function copyAppsScriptCode() {
+      const code = getAppsScriptSourceCode();
+      try {
+        await navigator.clipboard.writeText(code);
+        showToast('✅ 已複製最新版 Code.gs 程式碼到剪貼簿！', 'success');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showToast('✅ 已複製最新版 Code.gs 程式碼！', 'success');
+      }
+    }
+
+    function renderSheetTable(highlightId = null) {
+      if (!appState.sheetUnlocked) return;
+
+      const all = appState.records;
+      const okList = all.filter(r => r.regStatus === '成功');
+      const pendingList = all.filter(r => r.regStatus === '審核中');
+      const failList = all.filter(r => r.regStatus === '失敗');
+
+      document.getElementById('sheet-stat-total').textContent = all.length;
+      document.getElementById('sheet-stat-ok').textContent = okList.length;
+      document.getElementById('sheet-stat-pending').textContent = pendingList.length;
+      document.getElementById('sheet-stat-fail').textContent = failList.length;
+
+      // 12/25 統計
+      const d1CiList = okList.filter(r => r.d1CheckedIn);
+      const d1MealList = okList.filter(r => r.d1MealPicked);
+      const d1Meat = d1MealList.filter(r => r.meal === '葷').length;
+      const d1Veg = d1MealList.filter(r => r.meal === '素').length;
+      const d1Rate = okList.length > 0 ? Math.round((d1CiList.length / okList.length) * 100) : 0;
+
+      document.getElementById('sheet-d1-rate').textContent = `報到率 ${d1Rate}%`;
+      document.getElementById('sheet-d1-ci').textContent = d1CiList.length;
+      document.getElementById('sheet-d1-exp').textContent = okList.length;
+      document.getElementById('sheet-d1-meal').textContent = d1MealList.length;
+      document.getElementById('sheet-d1-meal-detail').textContent = `(葷${d1Meat}/素${d1Veg})`;
+
+      // 12/26 統計
+      const d2CiList = okList.filter(r => r.d2CheckedIn);
+      const d2MealList = okList.filter(r => r.d2MealPicked);
+      const d2Meat = d2MealList.filter(r => r.meal === '葷').length;
+      const d2Veg = d2MealList.filter(r => r.meal === '素').length;
+      const d2Rate = okList.length > 0 ? Math.round((d2CiList.length / okList.length) * 100) : 0;
+
+      document.getElementById('sheet-d2-rate').textContent = `報到率 ${d2Rate}%`;
+      document.getElementById('sheet-d2-ci').textContent = d2CiList.length;
+      document.getElementById('sheet-d2-exp').textContent = okList.length;
+      document.getElementById('sheet-d2-meal').textContent = d2MealList.length;
+      document.getElementById('sheet-d2-meal-detail').textContent = `(葷${d2Meat}/素${d2Veg})`;
+
+      const regFilter = document.getElementById('sheet-filter-reg')?.value || 'ALL';
+      const dayStatusFilter = document.getElementById('sheet-filter-daystatus')?.value || 'ALL';
+      const schoolFilter = document.getElementById('sheet-filter-school')?.value || 'ALL';
+      const keyword = (document.getElementById('sheet-search-input')?.value || '').trim().toLowerCase();
+
+      const filtered = all.filter(r => {
+        if (regFilter !== 'ALL' && r.regStatus !== regFilter) return false;
+        if (schoolFilter !== 'ALL' && r.schoolName !== schoolFilter) return false;
+        if (dayStatusFilter === 'D1_ARRIVED' && !r.d1CheckedIn) return false;
+        if (dayStatusFilter === 'D1_UNARRIVED' && r.d1CheckedIn) return false;
+        if (dayStatusFilter === 'D1_MEAL_PICKED' && !r.d1MealPicked) return false;
+        if (dayStatusFilter === 'D1_MEAL_UNPICKED' && !(r.d1CheckedIn && !r.d1MealPicked)) return false;
+        if (dayStatusFilter === 'D2_ARRIVED' && !r.d2CheckedIn) return false;
+        if (dayStatusFilter === 'D2_UNARRIVED' && r.d2CheckedIn) return false;
+        if (dayStatusFilter === 'D2_MEAL_PICKED' && !r.d2MealPicked) return false;
+        if (dayStatusFilter === 'D2_MEAL_UNPICKED' && !(r.d2CheckedIn && !r.d2MealPicked)) return false;
+        if (keyword && !`${r.studentName} ${r.schoolName} ${r.classDisplay} ${r.phone} ${r.guardianName}`.toLowerCase().includes(keyword)) return false;
+        return true;
+      });
+
+      const tbody = document.getElementById('sheet-overview-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = filtered.length === 0
+        ? `<tr><td colspan="15" class="px-4 py-8 text-center text-xs text-slate-500">無符合篩選條件的資料列。</td></tr>`
+        : filtered.map(r => {
+            const renderTogglePill = (active, activeText, inactiveText, handlerCall) => `
+              <button type="button" onclick="${handlerCall}" title="點擊切換狀態並同步寫回 Google Sheet" class="px-2 py-1 rounded-lg text-[11px] font-bold transition ${active ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+                ${active ? activeText : inactiveText}
+              </button>
+            `;
+            return `
+              <tr class="${highlightId === r.id ? 'row-flash' : ''} hover:bg-slate-50">
+                <td class="px-3 py-2.5 font-mono text-slate-400">#${r.rowNumber}</td>
+                <td class="px-3 py-2.5">
+                  ${getRegStatusBadgeHtml(r.regStatus)}
+                  ${r.failReason ? `<div class="text-[11px] text-rose-600 mt-0.5 max-w-[160px] truncate" title="${escapeHtml(r.failReason)}">${escapeHtml(r.failReason)}</div>` : ''}
+                </td>
+                <td class="px-3 py-2.5 font-bold text-slate-900">${escapeHtml(r.studentName)}</td>
+                <td class="px-3 py-2.5 text-slate-600">${escapeHtml(r.studentDob || '')}</td>
+                <td class="px-3 py-2.5 font-mono text-slate-600">${escapeHtml(r.studentId || '')}</td>
+                <td class="px-3 py-2.5 font-semibold text-slate-800">${escapeHtml(r.schoolName)}</td>
+                <td class="px-3 py-2.5 text-slate-600">${escapeHtml(formatGradeClassSeat(r, false))}</td>
+                <td class="px-3 py-2.5 font-semibold ${r.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${r.meal === '素' ? '🥬 素食' : '🍗 葷食'}</td>
+                <td class="px-3 py-2.5 text-slate-700">${escapeHtml(r.guardianName || '')}</td>
+                <td class="px-3 py-2.5 font-mono text-slate-700">${escapeHtml(r.phone || '')}</td>
+                <td class="px-3 py-2.5 text-center">${renderTogglePill(r.d1CheckedIn, `✅ ${r.d1CheckinTime || '已報到'}`, '⏳ 未報到', `toggleDayFieldFromSheet('${r.id}', 'd1CheckedIn')`)}</td>
+                <td class="px-3 py-2.5 text-center">${renderTogglePill(r.d1MealPicked, `🍱 ${r.d1MealTime || '已領餐'}`, '⏳ 未領餐', `toggleDayFieldFromSheet('${r.id}', 'd1MealPicked')`)}</td>
+                <td class="px-3 py-2.5 text-center">${renderTogglePill(r.d2CheckedIn, `✅ ${r.d2CheckinTime || '已報到'}`, '⏳ 未報到', `toggleDayFieldFromSheet('${r.id}', 'd2CheckedIn')`)}</td>
+                <td class="px-3 py-2.5 text-center">${renderTogglePill(r.d2MealPicked, `🍱 ${r.d2MealTime || '已領餐'}`, '⏳ 未領餐', `toggleDayFieldFromSheet('${r.id}', 'd2MealPicked')`)}</td>
+                <td class="px-3 py-2.5 text-right space-x-1">
+                  <button type="button" onclick="openEditStatusModal('${r.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold">狀態</button>
+                  <button type="button" onclick="openDataCorrectionModal('${r.id}', 'sheet')" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold">修正</button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+    }
+
+    async function toggleDayFieldFromSheet(recordId, fieldName) {
+      const rec = appState.records.find(r => r.id === recordId);
+      if (!rec) return;
+      const nowTime = getCurrentTimeHHMM();
+
+      if (fieldName === 'd1CheckedIn') {
+        rec.d1CheckedIn = !rec.d1CheckedIn;
+        rec.d1CheckinTime = rec.d1CheckedIn ? nowTime : '';
+        if (!rec.d1CheckedIn) { rec.d1MealPicked = false; rec.d1MealTime = ''; }
+      } else if (fieldName === 'd1MealPicked') {
+        rec.d1MealPicked = !rec.d1MealPicked;
+        rec.d1MealTime = rec.d1MealPicked ? nowTime : '';
+        if (rec.d1MealPicked && !rec.d1CheckedIn) { rec.d1CheckedIn = true; rec.d1CheckinTime = nowTime; }
+      } else if (fieldName === 'd2CheckedIn') {
+        rec.d2CheckedIn = !rec.d2CheckedIn;
+        rec.d2CheckinTime = rec.d2CheckedIn ? nowTime : '';
+        if (!rec.d2CheckedIn) { rec.d2MealPicked = false; rec.d2MealTime = ''; }
+      } else if (fieldName === 'd2MealPicked') {
+        rec.d2MealPicked = !rec.d2MealPicked;
+        rec.d2MealTime = rec.d2MealPicked ? nowTime : '';
+        if (rec.d2MealPicked && !rec.d2CheckedIn) { rec.d2CheckedIn = true; rec.d2CheckinTime = nowTime; }
+      }
+
+      syncAllViews(rec.id);
+      showToast(`✅ 已更新「${rec.studentName}」狀態並寫回 Google Sheet`, 'success');
+      await pushRowUpdateToAppsScript(rec);
+    }
+
+    // 管理員調整審核狀態彈窗
+    function openEditStatusModal(recordId) {
+      const rec = appState.records.find(r => r.id === recordId);
+      if (!rec) return;
+      document.getElementById('edit-record-id').value = rec.id;
+      document.getElementById('edit-student-label').textContent = `${rec.schoolName}・${rec.studentName}`;
+      document.getElementById('edit-reg-status').value = rec.regStatus;
+      document.getElementById('edit-fail-reason').value = rec.failReason || '';
+      toggleFailReasonField();
+
+      const modal = document.getElementById('edit-status-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEditStatusModal() {
+      const modal = document.getElementById('edit-status-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function toggleFailReasonField() {
+      const val = document.getElementById('edit-reg-status').value;
+      const wrap = document.getElementById('edit-fail-reason-wrap');
+      if (wrap) wrap.classList.toggle('hidden', val === '成功');
+    }
+
+    async function saveEditedStatus(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-record-id').value;
+      const rec = appState.records.find(r => r.id === id);
+      if (!rec) return;
+
+      rec.regStatus = document.getElementById('edit-reg-status').value;
+      rec.failReason = rec.regStatus === '成功' ? '' : document.getElementById('edit-fail-reason').value.trim();
+
+      closeEditStatusModal();
+      syncAllViews(rec.id);
+      showToast(`✅ 已更新「${rec.studentName}」報名狀態為「${rec.regStatus}」`, 'success');
+      await pushRowUpdateToAppsScript(rec);
+    }
+
+    // =========================================================================
+    // 13. 全視圖同步與初始化
+    // =========================================================================
+    function syncAllViews(highlightId = null) {
+      appState.schoolStudentCounts = buildSchoolStudentCounts(appState.records);
+
+      if (appState.lastQueriedStudentId) {
+        const currentStudent = appState.records.find(r => r.id === appState.lastQueriedStudentId);
+        if (currentStudent) renderStudentLookupCard(currentStudent);
+      }
+      if (appState.lastQueriedSchoolCode) {
+        renderSchoolLookupResult(appState.lastQueriedSchoolCode);
+      }
+      if (appState.staffUnlocked) {
+        renderStaffDashboard(highlightId);
+      }
+      if (appState.mealsUnlocked) {
+        renderMealsPanel(highlightId);
+      }
+      if (appState.sheetUnlocked) {
+        renderSheetTable(highlightId);
+      }
+    }
+
+    window.onload = function () {
+      let storedUrl = '';
+      try {
+        storedUrl = localStorage.getItem('ntnu_usr_apps_script_url') || '';
+      } catch (e) {}
+      appState.appsScriptUrl = storedUrl || DEFAULT_APPS_SCRIPT_URL;
+      populateSchoolDropdowns();
+      syncFromGoogleSheet(true);
+    };
+  </script>
+</body>
+</html>
