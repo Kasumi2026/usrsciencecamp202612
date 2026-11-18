@@ -1410,8 +1410,8 @@
             <input id="corr-school-name" type="text" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">班級</label>
-            <input id="corr-class-input" type="text" placeholder="例如：六忠 或 701" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+            <label class="block text-xs font-semibold text-slate-700 mb-1">年級／班級</label>
+            <input id="corr-class-input" type="text" placeholder="例如：國小六年級 或 701" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">座號</label>
@@ -1540,7 +1540,7 @@
               <th class="px-4 py-3 text-left">序</th>
               <th class="px-4 py-3 text-left">學生姓名</th>
               <th class="px-4 py-3 text-left">就讀學校</th>
-              <th class="px-4 py-3 text-left">班級</th>
+              <th class="px-4 py-3 text-left">年級／班級</th>
               <th class="px-4 py-3 text-left">監護人連絡電話</th>
               <th class="px-4 py-3 text-right">現場報到</th>
             </tr>
@@ -1731,7 +1731,10 @@
       '034503': '文昌國中',
       '014326': '三峽明德高中附屬國中部',
       '014772': '板橋重慶國小',
-      '343604': '長春國小'
+      '343604': '長春國小',
+      '034666': '中壢國小',
+      '034781': '永順國小',
+      '413618': '蘭雅國小'
     };
 
     function escapeHtml(str) {
@@ -1807,11 +1810,53 @@
 
     function inferGradeLevel(schoolName, classRaw, gradeRaw) {
       const combined = `${gradeRaw || ''} ${classRaw || ''}`.trim();
+      if (!combined) return '';
+
       const zhMap = { '一': '一', '1': '一', '二': '二', '2': '二', '三': '三', '3': '三', '四': '四', '4': '四', '五': '五', '5': '五', '六': '六', '6': '六' };
       const jhMap = { '七': '一', '7': '一', '一': '一', '1': '一', '八': '二', '8': '二', '二': '二', '2': '二', '九': '三', '9': '三', '三': '三', '3': '三' };
-      const isJunior = /國中|中學/.test(schoolName || '') || /[七八九789]年|[789]\d{2}/.test(combined);
 
-      if (isJunior) {
+      // 1. 明確標示「國小X年級」或「小一～小六」
+      const elemExplicit = combined.match(/(?:國小|小)\s*([一二三四五六1-6])(?:年級|年)?/);
+      if (elemExplicit && zhMap[elemExplicit[1]]) {
+        return `國小${zhMap[elemExplicit[1]]}年級`;
+      }
+
+      // 2. 明確標示「國中X年級」、「國一～國三」或「七、八、九年級」
+      const jhExplicit = combined.match(/(?:國中|國)\s*([一二三1-3])(?:年級|年)?/);
+      if (jhExplicit && jhMap[jhExplicit[1]]) {
+        return `國中${jhMap[jhExplicit[1]]}年級`;
+      }
+      const grade789 = combined.match(/([七八九789])\s*(?:年級|年)/);
+      if (grade789 && jhMap[grade789[1]]) {
+        return `國中${jhMap[grade789[1]]}年級`;
+      }
+
+      // 3. 四、五、六年級（含「四年級」「4年級」「五年級」「5年級」「六年級」「6年級」）一律對應為國小四年級～國小六年級
+      const grade456 = combined.match(/([四五六456])\s*(?:年級|年)/);
+      if (grade456 && zhMap[grade456[1]]) {
+        return `國小${zhMap[grade456[1]]}年級`;
+      }
+
+      // 4. 一、二、三年級依就讀學校判斷國小或國中
+      const isJuniorSchool = /國中|國中部/.test(schoolName || '') || (/中學/.test(schoolName || '') && !/中小學/.test(schoolName || ''));
+      const grade123 = combined.match(/([一二三123])\s*(?:年級|年)/);
+      if (grade123) {
+        if (isJuniorSchool && jhMap[grade123[1]]) return `國中${jhMap[grade123[1]]}年級`;
+        if (zhMap[grade123[1]]) return `國小${zhMap[grade123[1]]}年級`;
+      }
+
+      // 5. 依據三位數班級代碼推算（例如 401/501/601 -> 國小四/五/六年級；701/801/901 -> 國中一/二/三年級）
+      const code789 = combined.match(/\b([789])\d{2}\b/);
+      if (code789 && jhMap[code789[1]]) {
+        return `國中${jhMap[code789[1]]}年級`;
+      }
+      const code456 = combined.match(/\b([456])\d{2}\b/);
+      if (code456 && zhMap[code456[1]]) {
+        return `國小${zhMap[code456[1]]}年級`;
+      }
+
+      // 6. 兜底匹配單一數字或國字年級
+      if (isJuniorSchool) {
         const m = combined.match(/([七八九一二三123789])/);
         if (m && jhMap[m[1]]) return `國中${jhMap[m[1]]}年級`;
       } else {
@@ -1824,6 +1869,9 @@
     function formatClassForSchoolRoster(rawClass, gradeLevel) {
       const c = cleanOptionalField(rawClass);
       if (!c && gradeLevel) return gradeLevel;
+      if (gradeLevel && /^(?:國小|國中|小|國)?\s*[一二三四五六七八九1-9]\s*(?:年級|年)?$/.test(c)) {
+        return gradeLevel;
+      }
       return c;
     }
 
@@ -1835,10 +1883,12 @@
     function formatGradeClassSeat(rec, includeSchool = false) {
       const parts = [];
       if (includeSchool && rec.schoolName) parts.push(rec.schoolName);
-      if (rec.gradeLevel && (!rec.classDisplay || !rec.classDisplay.includes(rec.gradeLevel.replace(/國小|國中/, '')))) {
+      if (rec.gradeLevel) {
         parts.push(rec.gradeLevel);
       }
-      if (rec.classDisplay) parts.push(rec.classDisplay);
+      if (rec.classDisplay && rec.classDisplay !== rec.gradeLevel) {
+        parts.push(rec.classDisplay);
+      }
       if (rec.seatDisplay) parts.push(`${rec.seatDisplay}號`);
       return parts.join(' ') || '未填寫班級';
     }
@@ -2826,7 +2876,7 @@
             <div><span class="text-xs text-slate-500 block">6. 家長(監護人)身份證字號</span><span class="font-mono font-semibold text-slate-800">${escapeHtml(rec.guardianId ? maskIdNumber(rec.guardianId) : '')}</span></div>
             <div><span class="text-xs text-slate-500 block">7. 家長(監護人)手機</span><span class="font-semibold text-slate-800">${escapeHtml(rec.phone || '')}</span></div>
             <div><span class="text-xs text-slate-500 block">8. 餐別/餐食選擇</span><span class="font-bold ${rec.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${rec.meal === '素' ? '🥬 素食' : '🍗 葷食'}</span></div>
-            <div><span class="text-xs text-slate-500 block">9. 班級（就讀學校／座號）</span><span class="font-semibold text-slate-800">${escapeHtml(formatGradeClassSeat(rec, true))}</span></div>
+            <div><span class="text-xs text-slate-500 block">9. 年級／班級（就讀學校／座號）</span><span class="font-semibold text-slate-800">${escapeHtml(formatGradeClassSeat(rec, true))}</span></div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div class="p-3.5 rounded-2xl border border-slate-200 bg-white flex items-center justify-between">
@@ -2985,7 +3035,7 @@
             <span class="font-bold text-slate-900">${escapeHtml(rec.studentName)}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-500">就讀學校與班級：</span>
+            <span class="text-slate-500">就讀學校與年級班級：</span>
             <span class="font-semibold text-slate-800">${escapeHtml(formatGradeClassSeat(rec, true))}</span>
           </div>
           <div class="flex items-center justify-between">
@@ -3116,7 +3166,7 @@
       document.getElementById('corr-source-mode').value = sourceMode;
       document.getElementById('corr-student-name').value = rec.studentName;
       document.getElementById('corr-school-name').value = rec.schoolName;
-      document.getElementById('corr-class-input').value = rec.classDisplay;
+      document.getElementById('corr-class-input').value = rec.classDisplay || rec.gradeLevel || '';
       document.getElementById('corr-seat-input').value = rec.seatDisplay;
       document.getElementById('corr-meal-select').value = rec.meal;
       document.getElementById('corr-guardian-name').value = rec.guardianName;
@@ -3879,7 +3929,7 @@ function doPost(e) {
         if (dayStatusFilter === 'D2_UNARRIVED' && r.d2CheckedIn) return false;
         if (dayStatusFilter === 'D2_MEAL_PICKED' && !r.d2MealPicked) return false;
         if (dayStatusFilter === 'D2_MEAL_UNPICKED' && !(r.d2CheckedIn && !r.d2MealPicked)) return false;
-        if (keyword && !`${r.studentName} ${r.schoolName} ${r.classDisplay} ${r.phone} ${r.guardianName}`.toLowerCase().includes(keyword)) return false;
+        if (keyword && !`${r.studentName} ${r.schoolName} ${r.gradeLevel} ${r.classDisplay} ${r.phone} ${r.guardianName}`.toLowerCase().includes(keyword)) return false;
         return true;
       });
 
