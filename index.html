@@ -1651,6 +1651,142 @@
     </div>
   </div>
 
+  <!-- =====================================================================
+       彈窗 6：管理員下載清單選項設定視窗（代碼 999999 專用）
+       ===================================================================== -->
+  <div id="admin-download-options-modal" onclick="if (event.target === this) closeAdminDownloadModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col animate-fade-up">
+      <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 shrink-0">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold mb-1">
+            📥 管理員專用匯出設定（代碼 999999）
+          </div>
+          <h3 class="text-lg font-bold text-slate-900">下載清單格式與欄位設定</h3>
+          <p class="text-xs text-slate-500 mt-0.5">請依序設定下載方式、所需匯出欄位（依照點選先後順序排列）及資料保護遮罩選項。</p>
+        </div>
+        <button type="button" onclick="closeAdminDownloadModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <div class="overflow-y-auto py-4 space-y-6 flex-1 pr-1">
+        <!-- 1. 下載方式（單選） -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-bold text-slate-900">1. 下載方式（單選）</label>
+            <span class="text-[11px] text-slate-500">資料排序：1.年級（低→高） 2.班級（1→20，A→D，甲→戊，忠→愛） 3.座號（小→大）</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="cursor-pointer rounded-2xl border-2 p-4 transition flex items-start gap-3" id="dl-mode-card-one_click">
+              <input type="radio" name="admin-dl-mode" value="one_click" onchange="setAdminDownloadMode('one_click')" class="mt-1 accent-indigo-600" />
+              <div>
+                <div class="text-sm font-bold text-slate-900">選項 1「一鍵下載」</div>
+                <div class="text-xs text-slate-600 mt-0.5">輸出為單一「總表」（按筆數排序，並依年級、班級、座號規則整理）。</div>
+              </div>
+            </label>
+            <label class="cursor-pointer rounded-2xl border-2 p-4 transition flex items-start gap-3" id="dl-mode-card-by_school">
+              <input type="radio" name="admin-dl-mode" value="by_school" onchange="setAdminDownloadMode('by_school')" class="mt-1 accent-indigo-600" />
+              <div>
+                <div class="text-sm font-bold text-slate-900">選項 2「分類下載」</div>
+                <div class="text-xs text-slate-600 mt-0.5">按校分類（依學校建立獨立分頁與分類總表，各校內依年級→班級→座號排序）。</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. 下載內容（自行選擇所需資料 / 多選且按選擇順序排序） -->
+        <div class="space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <label class="text-sm font-bold text-slate-900">2. 下載內容（多選，且按點選順序排序）</label>
+              <p class="text-xs text-slate-500">系統預設保留「序號」與「學生姓名」作為識別基準，其餘欄位請依您希望的先後順序點選：</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="selectAllAdminDownloadFields()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+                全選（依序 1~13）
+              </button>
+              <button type="button" onclick="clearAdminDownloadFields()" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition">
+                清除重選
+              </button>
+            </div>
+          </div>
+
+          <!-- 13 項可點選欄位按鈕區 -->
+          <div id="admin-dl-fields-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+
+          <!-- 即時欄位順序預覽列 -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="text-[11px] font-bold text-slate-600 mb-1.5">📑 目前 Excel 欄位輸出順序預覽（點擊已選標籤可移除）：</div>
+            <div id="admin-dl-order-preview" class="flex flex-wrap items-center gap-1.5 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- 3. 呈現方式（是否需要資料保護，提供資料部分遮罩） -->
+        <div class="space-y-2.5">
+          <label class="text-sm font-bold text-slate-900 block">3. 呈現方式（是否需要資料保護，提供資料部分遮罩）</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="cursor-pointer rounded-2xl border-2 p-4 transition flex items-start gap-3" id="dl-mask-card-yes">
+              <input type="radio" name="admin-dl-mask" value="yes" onchange="setAdminDownloadMask('yes')" class="mt-1 accent-emerald-600" />
+              <div>
+                <div class="text-sm font-bold text-slate-900">選項 1「是」（啟用資料保護遮罩）</div>
+                <div class="text-xs text-slate-600 mt-0.5">姓名（王o明／王0明）、身分證字號、生日及手機號碼將進行部分遮罩保護。</div>
+              </div>
+            </label>
+            <label class="cursor-pointer rounded-2xl border-2 p-4 transition flex items-start gap-3" id="dl-mask-card-no">
+              <input type="radio" name="admin-dl-mask" value="no" onchange="setAdminDownloadMask('no')" class="mt-1 accent-indigo-600" />
+              <div>
+                <div class="text-sm font-bold text-slate-900">選項 2「否」（完整原始資料）</div>
+                <div class="text-xs text-slate-600 mt-0.5">不進行個資遮罩，完整匯出所有選定欄位之原始資料。</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end gap-2 shrink-0">
+        <button type="button" onclick="closeAdminDownloadModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+          取消
+        </button>
+        <button type="button" onclick="proceedToDownloadConfirm()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">
+          下一步：確認下載內容 →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       彈窗 7：管理員下載內容最終確認框
+       ===================================================================== -->
+  <div id="admin-download-confirm-modal" onclick="if (event.target === this) closeAdminDownloadConfirmModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-indigo-200 animate-fade-up">
+      <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl shrink-0">
+            📋
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">請確認下載清單設定內容</h3>
+            <p class="text-xs text-slate-500 mt-0.5">確認無誤後即可立即產生並下載 Excel 檔案</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAdminDownloadConfirmModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <div id="admin-dl-confirm-summary" class="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-3 text-slate-700"></div>
+
+      <div class="mt-5 pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end gap-2">
+        <button type="button" onclick="backToAdminDownloadOptions()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+          ← 返回修改選項
+        </button>
+        <button type="button" onclick="executeAdminCustomDownload()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
+          ✅ 確認無誤，立即下載 Excel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // =========================================================================
     // 1. 系統核心常數與全域狀態
@@ -1660,6 +1796,23 @@
     const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGO2IvZ_TTMGSBE8YIyB5SnlSATAosFIxjwQo284mE11vfyPvqgZMpcU1eXHWBGjVfxA/exec';
     const ADMIN_PASSWORD = '12251226';
     const SHEET_OVERVIEW_PASSWORD = '2526';
+    const ADMIN_ALL_SCHOOLS_CODE = '999999';
+
+    const ADMIN_DOWNLOAD_FIELDS = [
+      { key: 'regStatus', label: '報名狀態' },
+      { key: 'gradeLevel', label: '學生年級' },
+      { key: 'schoolName', label: '就讀學校' },
+      { key: 'classDisplay', label: '學生班級' },
+      { key: 'seatDisplay', label: '學生座號' },
+      { key: 'studentDob', label: '學生生日' },
+      { key: 'studentId', label: '學生身份證字號' },
+      { key: 'guardianName', label: '家長(監護人)姓名' },
+      { key: 'guardianDob', label: '家長(監護人)生日' },
+      { key: 'guardianId', label: '家長(監護人)身份證字號' },
+      { key: 'phone', label: '家長(監護人)手機' },
+      { key: 'meal', label: '餐別/餐點選擇' },
+      { key: 'failReason', label: '備註/原因' }
+    ];
 
     const appState = {
       activeTab: 'home',
@@ -1676,7 +1829,12 @@
       lastQueriedStudentId: null,
       lastQueriedSchoolCode: null,
       unpickedModalMealType: '葷',
-      isSyncing: false
+      isSyncing: false,
+      adminDownloadConfig: {
+        mode: 'one_click',
+        selectedFields: ['regStatus', 'schoolName', 'gradeLevel', 'classDisplay', 'seatDisplay', 'meal'],
+        maskData: 'no'
+      }
     };
 
     // =========================================================================
@@ -1801,6 +1959,28 @@
       return s.slice(0, 3) + '****' + s.slice(-3);
     }
 
+    function maskDateStr(dateStr) {
+      const s = String(dateStr ?? '').trim();
+      if (!s) return '';
+      const m = s.match(/^(\d{2,4})([\/\-年.])(\d{1,2})([\/\-月.]?)(\d{0,2})(日?)$/);
+      if (m) {
+        return `${m[1]}${m[2]}**${m[4] || '/'}**${m[6] || ''}`;
+      }
+      if (s.length <= 4) return s[0] + '**';
+      return s.slice(0, 4) + '****';
+    }
+
+    function maskPhoneStr(phoneStr) {
+      const s = String(phoneStr ?? '').trim();
+      if (!s) return '';
+      const digits = s.replace(/\D/g, '');
+      if (digits.length >= 7) {
+        return `${digits.slice(0, 4)}***${digits.slice(-3)}`;
+      }
+      if (s.length <= 3) return s[0] + '**';
+      return s.slice(0, 2) + '***' + s.slice(-2);
+    }
+
     function getCurrentTimeHHMM() {
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
@@ -1815,13 +1995,11 @@
       const zhMap = { '一': '一', '1': '一', '二': '二', '2': '二', '三': '三', '3': '三', '四': '四', '4': '四', '五': '五', '5': '五', '六': '六', '6': '六' };
       const jhMap = { '七': '一', '7': '一', '一': '一', '1': '一', '八': '二', '8': '二', '二': '二', '2': '二', '九': '三', '9': '三', '三': '三', '3': '三' };
 
-      // 1. 明確標示「國小X年級」或「小一～小六」
       const elemExplicit = combined.match(/(?:國小|小)\s*([一二三四五六1-6])(?:年級|年)?/);
       if (elemExplicit && zhMap[elemExplicit[1]]) {
         return `國小${zhMap[elemExplicit[1]]}年級`;
       }
 
-      // 2. 明確標示「國中X年級」、「國一～國三」或「七、八、九年級」
       const jhExplicit = combined.match(/(?:國中|國)\s*([一二三1-3])(?:年級|年)?/);
       if (jhExplicit && jhMap[jhExplicit[1]]) {
         return `國中${jhMap[jhExplicit[1]]}年級`;
@@ -1831,13 +2009,11 @@
         return `國中${jhMap[grade789[1]]}年級`;
       }
 
-      // 3. 四、五、六年級（含「四年級」「4年級」「五年級」「5年級」「六年級」「6年級」）一律對應為國小四年級～國小六年級
       const grade456 = combined.match(/([四五六456])\s*(?:年級|年)/);
       if (grade456 && zhMap[grade456[1]]) {
         return `國小${zhMap[grade456[1]]}年級`;
       }
 
-      // 4. 一、二、三年級依就讀學校判斷國小或國中
       const isJuniorSchool = /國中|國中部/.test(schoolName || '') || (/中學/.test(schoolName || '') && !/中小學/.test(schoolName || ''));
       const grade123 = combined.match(/([一二三123])\s*(?:年級|年)/);
       if (grade123) {
@@ -1845,7 +2021,6 @@
         if (zhMap[grade123[1]]) return `國小${zhMap[grade123[1]]}年級`;
       }
 
-      // 5. 依據三位數班級代碼推算（例如 401/501/601 -> 國小四/五/六年級；701/801/901 -> 國中一/二/三年級）
       const code789 = combined.match(/\b([789])\d{2}\b/);
       if (code789 && jhMap[code789[1]]) {
         return `國中${jhMap[code789[1]]}年級`;
@@ -1855,7 +2030,6 @@
         return `國小${zhMap[code456[1]]}年級`;
       }
 
-      // 6. 兜底匹配單一數字或國字年級
       if (isJuniorSchool) {
         const m = combined.match(/([七八九一二三123789])/);
         if (m && jhMap[m[1]]) return `國中${jhMap[m[1]]}年級`;
@@ -1902,6 +2076,121 @@
       return idx >= 0 ? idx : 99;
     }
 
+    function parseChineseClassNumber(str) {
+      const map = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 };
+      if (!str) return NaN;
+      if (str === '十') return 10;
+      if (str === '二十') return 20;
+      if (str.startsWith('十') && str.length === 2 && map[str[1]]) return 10 + map[str[1]];
+      if (str.startsWith('二十') && str.length === 3 && map[str[2]]) return 20 + map[str[2]];
+      if (str.length === 1 && map[str]) return map[str];
+      return NaN;
+    }
+
+    /**
+     * 班級排序鍵解析：
+     * 類別 1：1→20
+     * 類別 2：A→D
+     * 類別 3：甲→戊
+     * 類別 4：忠→愛
+     * 類別 5：其他文字班級
+     * 類別 99：未填寫具體班級（僅有年級）
+     */
+    function parseClassSortKey(rawClass, gradeLevel) {
+      let s = String(rawClass ?? '').trim();
+      if (!s || s === gradeLevel) {
+        return { cat: 99, sub: 9999, raw: '' };
+      }
+
+      s = s
+        .replace(/^(?:國小|國中|小|國)?\s*[一二三四五六七八九1-9]\s*(?:年級|年)\s*/g, '')
+        .replace(/班$/g, '')
+        .replace(/^[-_\s]+|[-_\s]+$/g, '')
+        .trim();
+
+      if (!s) {
+        return { cat: 99, sub: 9999, raw: '' };
+      }
+
+      if (/^[1-9]\d{2}$/.test(s)) {
+        return { cat: 1, sub: parseInt(s.slice(1), 10), raw: s };
+      }
+
+      if (/^\d+$/.test(s)) {
+        return { cat: 1, sub: parseInt(s, 10), raw: s };
+      }
+
+      const zhNum = parseChineseClassNumber(s);
+      if (!Number.isNaN(zhNum)) {
+        return { cat: 1, sub: zhNum, raw: s };
+      }
+
+      const upper = s.toUpperCase();
+      if (/^[A-Z]$/.test(upper)) {
+        return { cat: 2, sub: upper.charCodeAt(0) - 64, raw: s };
+      }
+      const gradeLetterMatch = upper.match(/^[1-9]\s*[-_]?\s*([A-Z])$/);
+      if (gradeLetterMatch) {
+        return { cat: 2, sub: gradeLetterMatch[1].charCodeAt(0) - 64, raw: s };
+      }
+
+      const stemsOrder = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+      const stemIdx = stemsOrder.indexOf(s);
+      if (stemIdx >= 0) {
+        return { cat: 3, sub: stemIdx + 1, raw: s };
+      }
+
+      const virtueOrder = ['忠', '孝', '仁', '愛', '信', '義', '和', '平', '禮', '智', '勇', '誠', '勤', '樸'];
+      const virtueIdx = virtueOrder.indexOf(s);
+      if (virtueIdx >= 0) {
+        return { cat: 4, sub: virtueIdx + 1, raw: s };
+      }
+
+      return { cat: 5, sub: 0, raw: s };
+    }
+
+    function compareByGradeClassSeat(a, b) {
+      // 1. 年級：低 → 高
+      const gradeA = a.gradeLevel || inferGradeLevel(a.schoolName, a.classDisplay, '');
+      const gradeB = b.gradeLevel || inferGradeLevel(b.schoolName, b.classDisplay, '');
+      const rankA = getGradeSortRank(gradeA);
+      const rankB = getGradeSortRank(gradeB);
+      if (rankA !== rankB) return rankA - rankB;
+
+      // 2. 班級：1→20，A→D，甲→戊，忠→愛
+      const clsA = parseClassSortKey(a.classDisplay, gradeA);
+      const clsB = parseClassSortKey(b.classDisplay, gradeB);
+      if (clsA.cat !== clsB.cat) return clsA.cat - clsB.cat;
+      if (clsA.sub !== clsB.sub) return clsA.sub - clsB.sub;
+      if (clsA.raw !== clsB.raw) {
+        const rawCmp = clsA.raw.localeCompare(clsB.raw, 'zh-Hant', { numeric: true });
+        if (rawCmp !== 0) return rawCmp;
+      }
+
+      // 3. 座號：小 → 大
+      const seatA = a.seatDisplay ? parseInt(a.seatDisplay, 10) : 9999;
+      const seatB = b.seatDisplay ? parseInt(b.seatDisplay, 10) : 9999;
+      const numA = Number.isNaN(seatA) ? 9998 : seatA;
+      const numB = Number.isNaN(seatB) ? 9998 : seatB;
+      if (numA !== numB) return numA - numB;
+
+      return (a.rowNumber || 0) - (b.rowNumber || 0);
+    }
+
+    function compareStudentsBySchoolThenGradeClassSeat(a, b) {
+      const codeA = a.schoolCode || getSchoolCode(a.schoolName) || '999999';
+      const codeB = b.schoolCode || getSchoolCode(b.schoolName) || '999999';
+      if (codeA !== codeB) return codeA.localeCompare(codeB);
+
+      const schoolA = a.schoolName || '未填寫學校';
+      const schoolB = b.schoolName || '未填寫學校';
+      if (schoolA !== schoolB) {
+        return schoolA.localeCompare(schoolB, 'zh-Hant');
+      }
+
+      return compareByGradeClassSeat(a, b);
+    }
+
     function buildSchoolStudentCounts(records) {
       const counts = {};
       records.forEach(r => {
@@ -1924,20 +2213,7 @@
         return a.schoolName.localeCompare(b.schoolName, 'zh-Hant');
       }
 
-      const rankA = getGradeSortRank(a.gradeLevel);
-      const rankB = getGradeSortRank(b.gradeLevel);
-      if (rankA !== rankB) return rankA - rankB;
-
-      const classCmp = (a.classDisplay || '').localeCompare(b.classDisplay || '', 'zh-Hant', { numeric: true });
-      if (classCmp !== 0) return classCmp;
-
-      const seatA = a.seatDisplay ? parseInt(a.seatDisplay, 10) : 9999;
-      const seatB = b.seatDisplay ? parseInt(b.seatDisplay, 10) : 9999;
-      const numA = Number.isNaN(seatA) ? 9998 : seatA;
-      const numB = Number.isNaN(seatB) ? 9998 : seatB;
-      if (numA !== numB) return numA - numB;
-
-      return (a.rowNumber || 0) - (b.rowNumber || 0);
+      return compareByGradeClassSeat(a, b);
     }
 
     // =========================================================================
@@ -2073,7 +2349,7 @@
         );
 
         const explicitCode = cleanOptionalField(getCell(cm.schoolCodeCol));
-        if (explicitCode && schoolName && !CODE_TO_PRIMARY_SCHOOL[explicitCode]) {
+        if (explicitCode && explicitCode !== ADMIN_ALL_SCHOOLS_CODE && schoolName && !CODE_TO_PRIMARY_SCHOOL[explicitCode]) {
           CODE_TO_PRIMARY_SCHOOL[explicitCode] = schoolName;
         }
         const schoolCode = explicitCode || getSchoolCode(schoolName);
@@ -2184,7 +2460,6 @@
         let headers = [];
         let dataRows = [];
 
-        // 優先透過 GViz JSON 讀取（取得完整格式與顯示文字）
         const gvizUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&gid=${GOOGLE_SHEET_GID}&_t=${Date.now()}`;
         try {
           const res = await fetch(gvizUrl);
@@ -2201,7 +2476,6 @@
             }));
           }
         } catch (gvizErr) {
-          // 改用 CSV 備援端點
           const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${GOOGLE_SHEET_GID}&_t=${Date.now()}`;
           const csvRes = await fetch(csvUrl);
           const csvText = await csvRes.text();
@@ -2916,6 +3190,100 @@
       if (!resultBox) return;
       resultBox.classList.remove('hidden');
 
+      // 管理員專用代碼：999999（顯示全體報名清單並提供「下載清單」功能選單）
+      if (code === ADMIN_ALL_SCHOOLS_CODE) {
+        const allRecords = [...appState.records].sort(compareStudentsBySchoolThenGradeClassSeat);
+        const okCount = allRecords.filter(r => r.regStatus === '成功').length;
+        const pendingCount = allRecords.filter(r => r.regStatus === '審核中').length;
+        const failCount = allRecords.filter(r => r.regStatus === '失敗').length;
+        const cancelledCount = allRecords.filter(r => r.regStatus === '🚫 取消報名').length;
+        const schoolCount = new Set(allRecords.map(r => r.schoolName || '未填寫學校')).size;
+
+        resultBox.innerHTML = `
+          <div class="space-y-4 animate-fade-up">
+            <div class="p-5 rounded-2xl bg-slate-900 text-white border border-slate-700 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 shadow-md">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-mono font-extrabold">${escapeHtml(code)}</span>
+                  <h3 class="text-lg font-bold text-white">全體報名總清冊（管理員專用）</h3>
+                  <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-sky-200 text-xs font-semibold">共 ${schoolCount} 所學校</span>
+                </div>
+                <div class="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-slate-200">
+                  <span>總報名：${allRecords.length} 人</span>
+                  <span class="text-emerald-300">✅ 報名成功：${okCount} 人</span>
+                  <span class="text-amber-300">⚠️ 審核中：${pendingCount} 人</span>
+                  <span class="text-rose-300">❌ 報名失敗：${failCount} 人</span>
+                  <span class="text-slate-300">🚫 取消報名：${cancelledCount} 人</span>
+                </div>
+                <p class="text-[11px] text-slate-300 mt-1.5">
+                  排序規則：年級（低→高）→ 班級（1→20，A→D，甲→戊，忠→愛）→ 座號（小→大）
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <button type="button" onclick="openAdminDownloadModal()" class="px-5 py-3 rounded-xl bg-gradient-to-r from-sky-400 via-emerald-400 to-amber-300 hover:brightness-110 text-slate-950 text-xs font-extrabold shadow-md transition flex items-center gap-1.5">
+                  <span>📥</span>
+                  <span>下載清單</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-slate-200">
+              <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-slate-600 text-xs font-semibold whitespace-nowrap">
+                  <tr>
+                    <th class="px-4 py-3 text-left">序</th>
+                    <th class="px-4 py-3 text-left">報名狀態</th>
+                    <th class="px-4 py-3 text-left">就讀學校</th>
+                    <th class="px-4 py-3 text-left">年級／班級／座號</th>
+                    <th class="px-4 py-3 text-left">學生姓名</th>
+                    <th class="px-4 py-3 text-left">餐別/餐食選擇</th>
+                    <th class="px-4 py-3 text-left">家長(監護人)姓名</th>
+                    <th class="px-4 py-3 text-left">家長(監護人)手機</th>
+                    <th class="px-4 py-3 text-left">兩日報到進度</th>
+                    <th class="px-4 py-3 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  ${allRecords.length === 0
+                    ? `<tr><td colspan="10" class="px-4 py-8 text-center text-xs text-slate-500">目前尚無任何報名資料。</td></tr>`
+                    : allRecords.map((r, i) => `
+                      <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 text-xs text-slate-500">${i + 1}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                          ${getRegStatusBadgeHtml(r.regStatus)}
+                          ${r.failReason ? `<div class="text-[11px] text-rose-600 mt-1">${escapeHtml(r.failReason)}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-3 text-xs font-bold text-indigo-900 whitespace-nowrap">${escapeHtml(r.schoolName || '未填寫學校')}</td>
+                        <td class="px-4 py-3 text-xs text-slate-700 whitespace-nowrap">${escapeHtml(formatGradeClassSeat(r, false))}</td>
+                        <td class="px-4 py-3 font-bold text-slate-900 whitespace-nowrap">${escapeHtml(r.studentName)}</td>
+                        <td class="px-4 py-3 text-xs font-semibold whitespace-nowrap ${r.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${r.meal === '素' ? '🥬 素食' : '🍗 葷食'}</td>
+                        <td class="px-4 py-3 text-xs text-slate-700 whitespace-nowrap">${escapeHtml(r.guardianName || '')}</td>
+                        <td class="px-4 py-3 text-xs font-mono text-slate-700 whitespace-nowrap">${escapeHtml(r.phone || '')}</td>
+                        <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
+                          <div>12/25：${r.d1CheckedIn ? `✅ (${r.d1CheckinTime || '已到'})` : '⏳ 未到'}</div>
+                          <div>12/26：${r.d2CheckedIn ? `✅ (${r.d2CheckinTime || '已到'})` : '⏳ 未到'}</div>
+                        </td>
+                        <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                          <button type="button" onclick="openDataCorrectionModal('${r.id}', 'school')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition">
+                            ✏️ 修正資料
+                          </button>
+                          ${r.regStatus !== '🚫 取消報名' ? `
+                            <button type="button" onclick="openCancelRegistrationModal('${r.id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition">
+                              🚫 取消報名
+                            </button>
+                          ` : ''}
+                        </td>
+                      </tr>
+                    `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       const recordWithCode = appState.records.find(r => r.schoolCode === code);
       const primarySchoolName = CODE_TO_PRIMARY_SCHOOL[code] || (recordWithCode ? recordWithCode.schoolName : '');
       if (!primarySchoolName) {
@@ -2930,7 +3298,7 @@
 
       const schoolRecords = appState.records
         .filter(r => r.schoolCode === code || normalizeSchoolName(r.schoolName) === normalizeSchoolName(primarySchoolName))
-        .sort(compareStudentsForRoster);
+        .sort(compareByGradeClassSeat);
 
       const okCount = schoolRecords.filter(r => r.regStatus === '成功').length;
       const pendingCount = schoolRecords.filter(r => r.regStatus === '審核中').length;
@@ -3079,12 +3447,388 @@
       }
     }
 
+    // =========================================================================
+    // 6-B. 管理員專用（代碼 999999）互動式下載清單設定與 Excel 匯出
+    // =========================================================================
+    function openAdminDownloadModal() {
+      if (appState.records.length === 0) {
+        showToast('目前尚無任何報名資料可匯出', 'warning');
+        return;
+      }
+      renderAdminDownloadOptionsUI();
+      const modal = document.getElementById('admin-download-options-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAdminDownloadModal() {
+      const modal = document.getElementById('admin-download-options-modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setAdminDownloadMode(mode) {
+      appState.adminDownloadConfig.mode = mode;
+      renderAdminDownloadOptionsUI();
+    }
+
+    function setAdminDownloadMask(maskVal) {
+      appState.adminDownloadConfig.maskData = maskVal;
+      renderAdminDownloadOptionsUI();
+    }
+
+    function toggleAdminDownloadField(fieldKey) {
+      const list = appState.adminDownloadConfig.selectedFields;
+      const idx = list.indexOf(fieldKey);
+      if (idx >= 0) {
+        list.splice(idx, 1);
+      } else {
+        list.push(fieldKey);
+      }
+      renderAdminDownloadOptionsUI();
+    }
+
+    function selectAllAdminDownloadFields() {
+      appState.adminDownloadConfig.selectedFields = ADMIN_DOWNLOAD_FIELDS.map(f => f.key);
+      renderAdminDownloadOptionsUI();
+    }
+
+    function clearAdminDownloadFields() {
+      appState.adminDownloadConfig.selectedFields = [];
+      renderAdminDownloadOptionsUI();
+    }
+
+    function renderAdminDownloadOptionsUI() {
+      const cfg = appState.adminDownloadConfig;
+
+      // 1. 單選模式卡片樣式
+      ['one_click', 'by_school'].forEach(m => {
+        const card = document.getElementById(`dl-mode-card-${m}`);
+        if (!card) return;
+        const radio = card.querySelector('input[type="radio"]');
+        const isSelected = cfg.mode === m;
+        if (radio) radio.checked = isSelected;
+        card.className = isSelected
+          ? 'cursor-pointer rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 p-4 transition flex items-start gap-3 shadow-xs'
+          : 'cursor-pointer rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white p-4 transition flex items-start gap-3';
+      });
+
+      // 2. 13 項多選欄位卡片（顯示點選順序編號）
+      const grid = document.getElementById('admin-dl-fields-grid');
+      if (grid) {
+        grid.innerHTML = ADMIN_DOWNLOAD_FIELDS.map(f => {
+          const orderIdx = cfg.selectedFields.indexOf(f.key);
+          const isSelected = orderIdx >= 0;
+          return `
+            <button
+              type="button"
+              onclick="toggleAdminDownloadField('${f.key}')"
+              class="text-left px-3.5 py-2.5 rounded-xl border-2 transition flex items-center justify-between gap-2 ${
+                isSelected
+                  ? 'border-indigo-600 bg-indigo-50 text-indigo-950 font-bold shadow-2xs'
+                  : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700 font-medium'
+              }"
+            >
+              <span class="text-xs truncate">${escapeHtml(f.label)}</span>
+              ${
+                isSelected
+                  ? `<span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">${orderIdx + 1}</span>`
+                  : `<span class="w-5 h-5 rounded-full border border-slate-300 text-transparent text-[11px] flex items-center justify-center shrink-0">✓</span>`
+              }
+            </button>
+          `;
+        }).join('');
+      }
+
+      // 即時順序預覽列
+      const previewBox = document.getElementById('admin-dl-order-preview');
+      if (previewBox) {
+        const fixedChips = `
+          <span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-bold">序號（固定）</span>
+          <span class="text-slate-400">→</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-bold">學生姓名（固定）</span>
+        `;
+        if (cfg.selectedFields.length === 0) {
+          previewBox.innerHTML = `${fixedChips} <span class="text-rose-600 font-semibold ml-1">（請點選上方至少一項下載內容）</span>`;
+        } else {
+          const fieldChips = cfg.selectedFields.map((key, idx) => {
+            const meta = ADMIN_DOWNLOAD_FIELDS.find(item => item.key === key);
+            const label = meta ? meta.label : key;
+            return `
+              <span class="text-slate-400">→</span>
+              <button type="button" onclick="toggleAdminDownloadField('${key}')" title="點擊移除此欄位" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-rose-600 text-white font-semibold transition">
+                ${idx + 1}. ${escapeHtml(label)} ✕
+              </button>
+            `;
+          }).join(' ');
+          previewBox.innerHTML = `${fixedChips} ${fieldChips}`;
+        }
+      }
+
+      // 3. 資料保護遮罩單選卡片樣式
+      ['yes', 'no'].forEach(val => {
+        const card = document.getElementById(`dl-mask-card-${val}`);
+        if (!card) return;
+        const radio = card.querySelector('input[type="radio"]');
+        const isSelected = cfg.maskData === val;
+        if (radio) radio.checked = isSelected;
+        card.className = isSelected
+          ? (val === 'yes'
+              ? 'cursor-pointer rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 p-4 transition flex items-start gap-3 shadow-xs'
+              : 'cursor-pointer rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 p-4 transition flex items-start gap-3 shadow-xs')
+          : 'cursor-pointer rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white p-4 transition flex items-start gap-3';
+      });
+    }
+
+    function proceedToDownloadConfirm() {
+      const cfg = appState.adminDownloadConfig;
+      if (!cfg.selectedFields || cfg.selectedFields.length === 0) {
+        showToast('⚠️ 請在「2. 下載內容」中至少選擇一項要匯出的資料欄位！', 'warning');
+        return;
+      }
+
+      const modeText = cfg.mode === 'one_click'
+        ? '一鍵下載（總表・按筆數排序）'
+        : '分類下載（按校分類・各校依年級低→高、班級1→20/A→D/甲→戊/忠→愛、座號小→大排序）';
+
+      const maskText = cfg.maskData === 'yes'
+        ? '是（已啟用資料保護部分遮罩：姓名、身分證、生日、手機遮罩）'
+        : '否（不遮罩，匯出完整原始資料）';
+
+      const orderedLabels = ['序號（固定）', '學生姓名（固定）'].concat(
+        cfg.selectedFields.map((key, idx) => {
+          const meta = ADMIN_DOWNLOAD_FIELDS.find(f => f.key === key);
+          return `${idx + 1}. ${meta ? meta.label : key}`;
+        })
+      );
+
+      const summaryEl = document.getElementById('admin-dl-confirm-summary');
+      if (summaryEl) {
+        summaryEl.innerHTML = `
+          <div class="space-y-1">
+            <div class="text-[11px] font-bold text-slate-500">1. 下載方式</div>
+            <div class="font-bold text-indigo-900 text-sm">${escapeHtml(modeText)}</div>
+          </div>
+          <div class="space-y-1 pt-2 border-t border-slate-200">
+            <div class="text-[11px] font-bold text-slate-500">2. 下載內容與欄位順序（共 ${orderedLabels.length} 欄）</div>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${orderedLabels.map(lbl => `<span class="px-2 py-0.5 rounded-md bg-white border border-slate-300 text-slate-800 font-semibold">${escapeHtml(lbl)}</span>`).join('')}
+            </div>
+          </div>
+          <div class="space-y-1 pt-2 border-t border-slate-200">
+            <div class="text-[11px] font-bold text-slate-500">3. 呈現方式（資料保護遮罩）</div>
+            <div class="font-bold ${cfg.maskData === 'yes' ? 'text-emerald-700' : 'text-slate-900'}">${escapeHtml(maskText)}</div>
+          </div>
+          <div class="space-y-1 pt-2 border-t border-slate-200 flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-500">預計匯出資料總筆數</span>
+            <span class="font-extrabold text-slate-900">${appState.records.length} 筆</span>
+          </div>
+        `;
+      }
+
+      closeAdminDownloadModal();
+      const confirmModal = document.getElementById('admin-download-confirm-modal');
+      confirmModal.classList.remove('hidden');
+      confirmModal.classList.add('flex');
+    }
+
+    function closeAdminDownloadConfirmModal() {
+      const confirmModal = document.getElementById('admin-download-confirm-modal');
+      if (!confirmModal) return;
+      confirmModal.classList.add('hidden');
+      confirmModal.classList.remove('flex');
+    }
+
+    function backToAdminDownloadOptions() {
+      closeAdminDownloadConfirmModal();
+      openAdminDownloadModal();
+    }
+
+    function getStatusDisplayText(regStatus) {
+      if (regStatus === '🚫 取消報名') return '🚫 取消報名';
+      if (regStatus === '成功') return '報名成功';
+      if (regStatus === '審核中') return '審核中';
+      return '報名失敗';
+    }
+
+    function buildAdminCustomExportRow(r, idx, selectedFields, isMasked) {
+      const rowObj = {
+        '序號': idx + 1,
+        '學生姓名': isMasked ? maskName(r.studentName) : r.studentName
+      };
+
+      selectedFields.forEach(key => {
+        switch (key) {
+          case 'regStatus':
+            rowObj['報名狀態'] = getStatusDisplayText(r.regStatus);
+            break;
+          case 'gradeLevel':
+            rowObj['學生年級'] = r.gradeLevel || '';
+            break;
+          case 'schoolName':
+            rowObj['就讀學校'] = r.schoolName || '未填寫學校';
+            break;
+          case 'classDisplay':
+            rowObj['學生班級'] = r.classDisplay || r.gradeLevel || '';
+            break;
+          case 'seatDisplay':
+            rowObj['學生座號'] = r.seatDisplay || '';
+            break;
+          case 'studentDob':
+            rowObj['學生生日'] = isMasked ? maskDateStr(r.studentDob) : (r.studentDob || '');
+            break;
+          case 'studentId':
+            rowObj['學生身份證字號'] = isMasked ? maskIdNumber(r.studentId) : (r.studentId || '');
+            break;
+          case 'guardianName':
+            rowObj['家長(監護人)姓名'] = isMasked ? maskNameZero(r.guardianName) : (r.guardianName || '');
+            break;
+          case 'guardianDob':
+            rowObj['家長(監護人)生日'] = isMasked ? maskDateStr(r.guardianDob) : (r.guardianDob || '');
+            break;
+          case 'guardianId':
+            rowObj['家長(監護人)身份證字號'] = isMasked ? maskIdNumber(r.guardianId) : (r.guardianId || '');
+            break;
+          case 'phone':
+            rowObj['家長(監護人)手機'] = isMasked ? maskPhoneStr(r.phone) : (r.phone || '');
+            break;
+          case 'meal':
+            rowObj['餐別/餐點選擇'] = r.meal === '素' ? '素食' : '葷食';
+            break;
+          case 'failReason':
+            rowObj['備註/原因'] = r.failReason || '';
+            break;
+          default:
+            break;
+        }
+      });
+
+      return rowObj;
+    }
+
+    function executeAdminCustomDownload() {
+      const cfg = appState.adminDownloadConfig;
+      const allRecords = [...appState.records];
+      if (allRecords.length === 0) {
+        showToast('目前尚無任何報名資料可匯出', 'warning');
+        return;
+      }
+
+      const isMasked = cfg.maskData === 'yes';
+      const maskSuffix = isMasked ? '_資料保護遮罩版' : '_完整版';
+
+      closeAdminDownloadConfirmModal();
+
+      // 選項 1：一鍵下載（總表，按筆數排序）
+      if (cfg.mode === 'one_click') {
+        const sortedByEntryCount = allRecords.sort((a, b) => (a.rowNumber || 0) - (b.rowNumber || 0));
+        const rowsData = sortedByEntryCount.map((r, idx) =>
+          buildAdminCustomExportRow(r, idx, cfg.selectedFields, isMasked)
+        );
+        const fileName = `臺師大USR科學實驗營_一鍵下載總表${maskSuffix}.xlsx`;
+
+        if (window.XLSX) {
+          const ws = XLSX.utils.json_to_sheet(rowsData);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, '全部總表');
+          XLSX.writeFile(wb, fileName);
+          showToast(`✅ 已完成一鍵下載「${fileName}」（共 ${rowsData.length} 筆）`, 'success');
+        } else {
+          exportRowsToCsvFallback(rowsData, fileName.replace(/\.xlsx$/, '.csv'));
+        }
+        return;
+      }
+
+      // 選項 2：分類下載（按校分類，每校內依 1.年級：低→高 2.班級：1→20，A→D，甲→戊，忠→愛 3.座號：小→大 排序）
+      const schoolGroupsMap = new Map();
+      allRecords.forEach(r => {
+        const key = r.schoolName || '未填寫學校';
+        if (!schoolGroupsMap.has(key)) {
+          schoolGroupsMap.set(key, []);
+        }
+        schoolGroupsMap.get(key).push(r);
+      });
+
+      const sortedSchoolEntries = Array.from(schoolGroupsMap.entries()).sort(([schoolA], [schoolB]) => {
+        const codeA = getSchoolCode(schoolA) || '999999';
+        const codeB = getSchoolCode(schoolB) || '999999';
+        if (codeA !== codeB) return codeA.localeCompare(codeB);
+        return schoolA.localeCompare(schoolB, 'zh-Hant');
+      });
+
+      const groupedSummaryRows = [];
+      sortedSchoolEntries.forEach(([, recs]) => {
+        recs.sort(compareByGradeClassSeat);
+        recs.forEach((r, idxInSchool) => {
+          groupedSummaryRows.push(buildAdminCustomExportRow(r, idxInSchool, cfg.selectedFields, isMasked));
+        });
+      });
+
+      const fileName = `臺師大USR科學實驗營_按校分類清單${maskSuffix}.xlsx`;
+
+      if (window.XLSX) {
+        const wb = XLSX.utils.book_new();
+        const usedSheetNames = new Set();
+
+        const summarySheetName = sanitizeExcelSheetName('依學校分類總表', usedSheetNames);
+        const wsSummary = XLSX.utils.json_to_sheet(groupedSummaryRows);
+        XLSX.utils.book_append_sheet(wb, wsSummary, summarySheetName);
+
+        sortedSchoolEntries.forEach(([schoolName, recs]) => {
+          const schoolRows = recs.map((r, idx) =>
+            buildAdminCustomExportRow(r, idx, cfg.selectedFields, isMasked)
+          );
+          const sheetName = sanitizeExcelSheetName(schoolName, usedSheetNames);
+          const wsSchool = XLSX.utils.json_to_sheet(schoolRows);
+          XLSX.utils.book_append_sheet(wb, wsSchool, sheetName);
+        });
+
+        XLSX.writeFile(wb, fileName);
+        showToast(`✅ 已完成分類下載「${fileName}」（共 ${sortedSchoolEntries.length} 所學校分頁）`, 'success');
+      } else {
+        exportRowsToCsvFallback(groupedSummaryRows, fileName.replace(/\.xlsx$/, '.csv'));
+      }
+    }
+
+    function sanitizeExcelSheetName(rawName, usedNames) {
+      let base = String(rawName || '未填寫學校')
+        .replace(/[:\\/?*\[\]]/g, '')
+        .trim();
+      if (!base) base = '未填寫學校';
+      if (base.length > 31) base = base.slice(0, 31);
+
+      let candidate = base;
+      let counter = 2;
+      while (usedNames.has(candidate)) {
+        const suffix = `_${counter}`;
+        candidate = base.slice(0, Math.max(1, 31 - suffix.length)) + suffix;
+        counter++;
+      }
+      usedNames.add(candidate);
+      return candidate;
+    }
+
+    function exportRowsToCsvFallback(rowsData, csvFileName) {
+      if (!rowsData || rowsData.length === 0) return;
+      const headers = Object.keys(rowsData[0]);
+      const csvLines = [headers.join(',')].concat(
+        rowsData.map(row => headers.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(','))
+      );
+      const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = csvFileName;
+      link.click();
+      showToast(`✅ 已匯出「${csvFileName}」`, 'success');
+    }
+
     function downloadSchoolExcel(code, version) {
       const recordWithCode = appState.records.find(r => r.schoolCode === code);
       const primarySchoolName = CODE_TO_PRIMARY_SCHOOL[code] || (recordWithCode ? recordWithCode.schoolName : code);
       const records = appState.records
         .filter(r => r.schoolCode === code || normalizeSchoolName(r.schoolName) === normalizeSchoolName(primarySchoolName))
-        .sort(compareStudentsForRoster);
+        .sort(compareByGradeClassSeat);
 
       if (records.length === 0) {
         showToast('目前該校無報名資料可匯出', 'warning');
@@ -3093,13 +3837,7 @@
 
       const isMasked = version === 'masked';
       const rowsData = records.map((r, idx) => {
-        const statusText = r.regStatus === '🚫 取消報名'
-          ? '🚫 取消報名'
-          : r.regStatus === '成功'
-            ? '報名成功'
-            : r.regStatus === '審核中'
-              ? '審核中'
-              : '報名失敗';
+        const statusText = getStatusDisplayText(r.regStatus);
         if (isMasked) {
           return {
             '序號': idx + 1,
@@ -3142,16 +3880,7 @@
         XLSX.writeFile(wb, fileName);
         showToast(`✅ 已下載「${fileName}」`, 'success');
       } else {
-        const headers = Object.keys(rowsData[0]);
-        const csvLines = [headers.join(',')].concat(
-          rowsData.map(row => headers.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(','))
-        );
-        const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName.replace(/\.xlsx$/, '.csv');
-        link.click();
-        showToast(`✅ 已匯出「${fileName.replace(/\.xlsx$/, '.csv')}」`, 'success');
+        exportRowsToCsvFallback(rowsData, fileName.replace(/\.xlsx$/, '.csv'));
       }
     }
 
