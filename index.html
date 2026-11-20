@@ -105,7 +105,7 @@
     .star-twinkle { animation: twinkle 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 
     .exp-node {
-      cursor: pointer;
+      cursor: default;
       outline: none;
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
       transform-box: fill-box;
@@ -114,8 +114,8 @@
     .exp-node:hover,
     .exp-node:focus,
     .exp-node:active {
-      transform: scale(1.08);
-      filter: drop-shadow(0 0 22px rgba(255, 255, 255, 0.78));
+      transform: scale(1.18);
+      filter: drop-shadow(0 0 26px rgba(255, 255, 255, 0.85));
     }
     .glass-panel {
       background: rgba(23, 35, 71, 0.74);
@@ -288,9 +288,6 @@
 
         <!-- 浮動海報原圖切換工具鈕 -->
         <div class="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-20 flex items-center gap-1.5">
-          <span class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cosmic-950/75 backdrop-blur-md border border-white/15 text-xs text-sky-200">
-            ✨ 點擊任一實驗泡泡查看關卡介紹
-          </span>
           <label for="poster-upload" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-cosmic-950/75 hover:bg-cosmic-950/90 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs text-slate-200 transition shadow-md">
             <svg class="w-3.5 h-3.5 text-amber-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -442,17 +439,17 @@
 
             <!-- 3. 領域一：生物 (Biology - 左側綠色泡泡群) -->
             <g class="bubble-float-2">
-              <g class="exp-node" onclick="openExperimentModal('bio_micro')">
+              <path d="M180,355 Q195,385 185,415" stroke="#86efac" stroke-width="14" stroke-linecap="round" opacity="0.35" />
+              <path d="M250,285 Q235,345 245,395" stroke="#86efac" stroke-width="14" stroke-linecap="round" opacity="0.35" />
+
+              <g class="exp-node">
                 <circle cx="212" cy="86" r="52" fill="url(#bioBubble)" stroke="#86efac" stroke-width="2" />
                 <ellipse cx="195" cy="65" rx="14" ry="7" transform="rotate(-30 195 65)" fill="rgba(255,255,255,0.45)" />
                 <text x="212" y="94" text-anchor="middle" font-size="25" font-weight="800" fill="#ffffff">生物</text>
               </g>
 
-              <path d="M180,355 Q195,385 185,415" stroke="#86efac" stroke-width="14" stroke-linecap="round" opacity="0.35" />
-              <path d="M250,285 Q235,345 245,395" stroke="#86efac" stroke-width="14" stroke-linecap="round" opacity="0.35" />
-
               <!-- 顯微鏡觀察泡泡 -->
-              <g id="node-bio-micro" class="exp-node" onclick="openExperimentModal('bio_micro')">
+              <g id="node-bio-micro" class="exp-node">
                 <circle cx="118" cy="295" r="88" fill="url(#bioBubble)" stroke="#86efac" stroke-width="2.2" />
                 <ellipse cx="86" cy="252" rx="22" ry="10" transform="rotate(-35 86 252)" fill="rgba(255,255,255,0.4)" />
                 <g transform="translate(75, 222)" stroke="#e2e8f0" stroke-width="2.5" fill="none">
@@ -466,7 +463,7 @@
               </g>
 
               <!-- 拍攝水中小生物泡泡 -->
-              <g id="node-bio-critters" class="exp-node" onclick="openExperimentModal('bio_micro')">
+              <g id="node-bio-critters" class="exp-node">
                 <circle cx="305" cy="225" r="88" fill="url(#bioBubble)" stroke="#86efac" stroke-width="2.5" />
                 <text x="305" y="164" text-anchor="middle" font-size="18" font-weight="800" fill="#064e3b">拍攝水中小生物</text>
                 <circle cx="302" cy="222" r="46" fill="#bae6fd" stroke="#334155" stroke-width="6" />
@@ -478,7 +475,7 @@
               </g>
 
               <!-- 水中植物泡泡 -->
-              <g id="node-bio-plants" class="exp-node" onclick="openExperimentModal('bio_plant')">
+              <g id="node-bio-plants" class="exp-node">
                 <circle cx="232" cy="485" r="102" fill="url(#bioBubble)" stroke="#86efac" stroke-width="2.2" />
                 <g transform="translate(215, 392)">
                   <path d="M25,115 Q15,65 22,15" stroke="#15803d" stroke-width="4" fill="none" />
@@ -499,13 +496,13 @@
 
             <!-- 4. 領域二：物理 (Physics - 中央偏左紫色泡泡群 + 三稜鏡彩虹光束) -->
             <g class="bubble-float-3">
-              <g class="exp-node" onclick="openExperimentModal('phy_light')">
+              <g class="exp-node">
                 <circle cx="472" cy="232" r="44" fill="url(#physBubble)" stroke="#e879f9" stroke-width="2" />
                 <text x="472" y="240" text-anchor="middle" font-size="22" font-weight="800" fill="#ffffff">物理</text>
               </g>
 
               <!-- 密室逃脫：理化綜合關卡泡泡 -->
-              <g id="node-phys-escape" class="exp-node" onclick="openExperimentModal('phy_escape')">
+              <g id="node-phys-escape" class="exp-node">
                 <circle cx="575" cy="308" r="74" fill="url(#physBubble)" stroke="#e879f9" stroke-width="2.4" />
                 <text x="575" y="256" text-anchor="middle" font-size="17" font-weight="800" fill="#fae8ff">密室逃脫</text>
                 <path d="M560,292 A17,17 0 1,1 590,292 L596,332 L554,332 Z" fill="#4c1d95" stroke="#f0abfc" stroke-width="2.5" />
@@ -514,7 +511,7 @@
               </g>
 
               <!-- 光與顏色（三稜鏡與彩虹色散光束） -->
-              <g id="node-phys-light" class="exp-node" onclick="openExperimentModal('phy_light')">
+              <g id="node-phys-light" class="exp-node">
                 <circle cx="458" cy="495" r="102" fill="url(#physBubble)" stroke="#e879f9" stroke-width="2.4" />
                 <text x="458" y="382" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">光與顏色</text>
 
@@ -534,13 +531,13 @@
 
             <!-- 5. 領域三：化學1 (Chemistry 1 - 中央偏右水藍色泡泡群) -->
             <g class="bubble-float-1">
-              <g class="exp-node" onclick="openExperimentModal('chem1_h2')">
+              <g class="exp-node">
                 <circle cx="772" cy="215" r="46" fill="url(#chem1Bubble)" stroke="#7dd3fc" stroke-width="2" />
                 <text x="772" y="223" text-anchor="middle" font-size="22" font-weight="800" fill="#ffffff">化學1</text>
               </g>
 
               <!-- 氫氣製備 + 性質檢驗 -->
-              <g id="node-chem1-h2" class="exp-node" onclick="openExperimentModal('chem1_h2')">
+              <g id="node-chem1-h2" class="exp-node">
                 <circle cx="695" cy="355" r="76" fill="url(#chem1Bubble)" stroke="#7dd3fc" stroke-width="2.2" />
                 <circle cx="852" cy="335" r="64" fill="url(#chem1Bubble)" stroke="#7dd3fc" stroke-width="2.2" />
 
@@ -557,7 +554,7 @@
               </g>
 
               <!-- 二氧化碳製備 + 性質檢驗 -->
-              <g id="node-chem1-co2" class="exp-node" onclick="openExperimentModal('chem1_co2')">
+              <g id="node-chem1-co2" class="exp-node">
                 <circle cx="715" cy="512" r="64" fill="url(#chem1Bubble)" stroke="#7dd3fc" stroke-width="2.2" />
                 <circle cx="878" cy="505" r="78" fill="url(#chem1Bubble)" stroke="#7dd3fc" stroke-width="2.2" />
 
@@ -583,13 +580,13 @@
 
             <!-- 6. 領域四：化學2 (Chemistry 2 - 右側橘金色泡泡群) -->
             <g class="bubble-float-2">
-              <g class="exp-node" onclick="openExperimentModal('chem2_magdeburg')">
+              <g class="exp-node">
                 <circle cx="1018" cy="96" r="50" fill="url(#chem2Bubble)" stroke="#fdba74" stroke-width="2" />
                 <text x="1018" y="104" text-anchor="middle" font-size="23" font-weight="800" fill="#ffffff">化學2</text>
               </g>
 
               <!-- 大氣壓力：馬德堡半球 -->
-              <g id="node-chem2-magdeburg" class="exp-node" onclick="openExperimentModal('chem2_magdeburg')">
+              <g id="node-chem2-magdeburg" class="exp-node">
                 <circle cx="1115" cy="148" r="44" fill="url(#chem2Bubble)" stroke="#fdba74" stroke-width="2" />
                 <text x="1115" y="153" text-anchor="middle" font-size="14" font-weight="800" fill="#431407">大氣壓力</text>
 
@@ -604,7 +601,7 @@
               </g>
 
               <!-- Cyanotype 藍印術實驗 -->
-              <g id="node-chem2-cyanotype" class="exp-node" onclick="openExperimentModal('chem2_cyanotype')">
+              <g id="node-chem2-cyanotype" class="exp-node">
                 <circle cx="1108" cy="318" r="78" fill="url(#chem2Bubble)" stroke="#fdba74" stroke-width="2.4" />
                 <text x="1108" y="262" text-anchor="middle" font-size="14" font-weight="800" fill="#431407">Cyanotype</text>
                 <rect x="1074" y="275" width="68" height="76" rx="6" fill="#1e3a8a" stroke="#f8fafc" stroke-width="3" />
@@ -613,7 +610,7 @@
               </g>
 
               <!-- 墨水的秘密：色層分析 -->
-              <g id="node-chem2-chromato" class="exp-node" onclick="openExperimentModal('chem2_chromato')">
+              <g id="node-chem2-chromato" class="exp-node">
                 <circle cx="962" cy="402" r="74" fill="url(#chem2Bubble)" stroke="#fdba74" stroke-width="2.4" />
                 <text x="962" y="352" text-anchor="middle" font-size="14" font-weight="800" fill="#431407">墨水的秘密</text>
                 <rect x="932" y="362" width="60" height="62" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" />
@@ -624,7 +621,7 @@
               </g>
 
               <!-- 碳60模型製作 -->
-              <g id="node-chem2-c60" class="exp-node" onclick="openExperimentModal('chem2_c60')">
+              <g id="node-chem2-c60" class="exp-node">
                 <circle cx="1088" cy="512" r="76" fill="url(#chem2Bubble)" stroke="#fdba74" stroke-width="2.4" />
                 <text x="1088" y="458" text-anchor="middle" font-size="15" font-weight="900" fill="#431407">碳60模型製作</text>
                 <g transform="translate(1088, 518)" stroke="#334155" stroke-width="2" fill="none">
@@ -701,7 +698,7 @@
             </div>
             <h3 class="text-base font-extrabold text-white group-hover:text-purple-200 transition">各校代碼名冊查詢</h3>
             <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
-              輸入教育部 6 碼學校代碼檢視全校報名清冊與報到進度，支援下載姓名保護版或完整版 Excel 名冊。
+              輸入教育部 6 碼學校代碼檢視全校報名清冊與報到進度，支援自訂欄位與資料保護遮罩下載清冊。
             </p>
           </div>
           <div class="mt-4 pt-3 border-t border-white/10 text-xs font-extrabold text-purple-300 flex items-center justify-between">
@@ -785,13 +782,13 @@
       <div id="view-school-lookup" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 hidden">
         <div class="max-w-2xl">
           <h2 class="text-xl font-bold text-slate-900">各校查詢專區</h2>
-          <p class="text-sm text-slate-500 mt-1">供各校校長、主任或承辦教師輸入「教育部 6 碼學校代碼」，查詢貴校學生報名清冊（含報名失敗原因）、修正資料，並下載姓名保護版或完整版 Excel。</p>
+          <p class="text-sm text-slate-500 mt-1">供各校校長、主任或承辦教師輸入「教育部 6 碼學校代碼」，查詢貴校學生報名清冊（含報名失敗原因）、修正資料，並可自訂欄位與資料保護遮罩下載清冊。</p>
         </div>
 
         <form id="school-lookup-form" onsubmit="handleSchoolLookup(event)" class="mt-6 flex flex-col sm:flex-row gap-3 max-w-xl">
           <div class="flex-1">
             <label class="block text-xs font-semibold text-slate-700 mb-1.5">教育部 6 碼學校代碼</label>
-            <input id="school-code-input" type="text" required maxlength="6" placeholder="例如：000000" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm uppercase tracking-wider focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+            <input id="school-code-input" type="text" required maxlength="6" placeholder="請輸入 6 碼學校代碼" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm uppercase tracking-wider focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
           </div>
           <div class="sm:self-end">
             <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
@@ -1329,59 +1326,6 @@
   </footer>
 
   <!-- =====================================================================
-       彈窗 0：首頁實驗關卡詳情介紹視窗（點擊星圖任一泡泡開啟）
-       ===================================================================== -->
-  <div id="experiment-detail-modal" onclick="if (event.target === this) closeExperimentModal()" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-    <div class="relative w-full max-w-lg rounded-3xl bg-cosmic-900 border border-white/20 p-6 sm:p-7 shadow-2xl text-white animate-fade-up">
-      <button
-        type="button"
-        onclick="closeExperimentModal()"
-        aria-label="關閉視窗"
-        class="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
-      >
-        ✕
-      </button>
-
-      <span id="exp-modal-badge" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-sky-400/20 text-sky-300 mb-2">
-        🧪 化學 1・氣體製備與檢驗
-      </span>
-      <h3 id="exp-modal-title" class="text-xl sm:text-2xl font-black text-white mb-2">
-        🫧 氫氣製備與性質檢驗
-      </h3>
-      <p id="exp-modal-desc" class="text-xs sm:text-sm text-slate-200 leading-relaxed mb-4">
-        親手組裝錐形瓶與導氣管裝置，透過金屬與酸液反應產生氫氣並運用排水集氣法收集。
-      </p>
-
-      <div class="flex flex-wrap gap-2 mb-6">
-        <span id="exp-modal-tag1" class="px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-xs font-semibold text-sky-200">
-          🔬 動手組裝玻璃導管
-        </span>
-        <span id="exp-modal-tag2" class="px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-xs font-semibold text-amber-200">
-          💡 科學探究與安全檢驗
-        </span>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2.5 pt-4 border-t border-white/15">
-        <a
-          href="https://forms.gle/5ZKo7aWtfLmsmBeY9"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex-1 text-center py-3 px-4 rounded-2xl font-extrabold text-xs sm:text-sm text-slate-950 bg-gradient-to-r from-sky-300 via-emerald-300 to-amber-300 hover:brightness-110 transition shadow-lg"
-        >
-          📝 立即報名參加營隊 ↗
-        </a>
-        <button
-          type="button"
-          onclick="closeExperimentModal(); switchMainTab('lookup');"
-          class="py-3 px-4 rounded-2xl font-bold text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border border-white/20 transition"
-        >
-          🔍 查詢報名狀態
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =====================================================================
        彈窗 1：學生／家長／各校資料確認與修正視窗
        ===================================================================== -->
   <div id="data-correction-modal" onclick="if (event.target === this) closeDataCorrectionModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
@@ -1410,8 +1354,23 @@
             <input id="corr-school-name" type="text" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">年級／班級</label>
-            <input id="corr-class-input" type="text" placeholder="例如：國小六年級 或 701" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+            <label class="block text-xs font-semibold text-slate-700 mb-1">年級</label>
+            <select id="corr-grade-select" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">自動判斷／未指定</option>
+              <option value="國小一年級">國小一年級</option>
+              <option value="國小二年級">國小二年級</option>
+              <option value="國小三年級">國小三年級</option>
+              <option value="國小四年級">國小四年級</option>
+              <option value="國小五年級">國小五年級</option>
+              <option value="國小六年級">國小六年級</option>
+              <option value="國中一年級">國中一年級</option>
+              <option value="國中二年級">國中二年級</option>
+              <option value="國中三年級">國中三年級</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">班級</label>
+            <input id="corr-class-input" type="text" placeholder="例如：701 或 忠班" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">座號</label>
@@ -1428,9 +1387,13 @@
             <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)姓名</label>
             <input id="corr-guardian-name" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
-          <div class="sm:col-span-2">
+          <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)手機</label>
             <input id="corr-phone-input" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">學生生日</label>
+            <input id="corr-student-dob" type="text" placeholder="例如：2015/5/12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
         </div>
 
@@ -1440,14 +1403,10 @@
             <input id="corr-student-id" type="text" maxlength="12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">學生生日</label>
-            <input id="corr-student-dob" type="text" placeholder="例如：2015/5/12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-          </div>
-          <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)身份證字號</label>
             <input id="corr-guardian-id" type="text" maxlength="12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
-          <div>
+          <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-slate-700 mb-1">家長(監護人)生日</label>
             <input id="corr-guardian-dob" type="text" placeholder="例如：1982/8/20" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
@@ -1652,14 +1611,14 @@
   </div>
 
   <!-- =====================================================================
-       彈窗 6：管理員下載清單選項設定視窗（代碼 999999 專用）
+       彈窗 6：管理員下載清單選項設定視窗（代號 999999 專用）
        ===================================================================== -->
   <div id="admin-download-options-modal" onclick="if (event.target === this) closeAdminDownloadModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col animate-fade-up">
       <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 shrink-0">
         <div>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold mb-1">
-            📥 管理員專用匯出設定（代碼 999999）
+            📥 管理員專用匯出設定（代號 999999）
           </div>
           <h3 class="text-lg font-bold text-slate-900">下載清單格式與欄位設定</h3>
           <p class="text-xs text-slate-500 mt-0.5">請依序設定下載方式、所需匯出欄位（依照點選先後順序排列）及資料保護遮罩選項。</p>
@@ -1787,6 +1746,124 @@
     </div>
   </div>
 
+  <!-- =====================================================================
+       彈窗 8：各校查詢專區「下載清冊」選項設定視窗
+       ===================================================================== -->
+  <div id="school-download-options-modal" onclick="if (event.target === this) closeSchoolDownloadModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col animate-fade-up">
+      <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 shrink-0">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold mb-1">
+            🏫 <span id="school-dl-modal-school-label">各校清冊匯出設定</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900">下載清冊格式與欄位設定</h3>
+          <p class="text-xs text-slate-500 mt-0.5">請選擇所需下載內容（多選且按點選先後順序排列）與資料保護遮罩方式。</p>
+        </div>
+        <button type="button" onclick="closeSchoolDownloadModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <div class="overflow-y-auto py-4 space-y-6 flex-1 pr-1">
+        <!-- 資料排序規則說明條 -->
+        <div class="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200 text-xs text-indigo-900 flex flex-wrap items-center justify-between gap-2">
+          <span class="font-bold">📑 清冊自動排序順序：</span>
+          <span>1. 年級（低→高） → 2. 班級（1→20，A→D，甲→戊，忠→愛） → 3. 座號（小→大）</span>
+        </div>
+
+        <!-- 1. 下載內容（自行選擇所需資料 / 多選且按選擇順序排序） -->
+        <div class="space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <label class="text-sm font-bold text-slate-900">1. 下載內容（多選，且按點選順序排序）</label>
+              <p class="text-xs text-slate-500">系統預設保留「序號」、「學生年級」與「學生姓名」，其餘欄位請依您希望的先後順序點選：</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="selectAllSchoolDownloadFields()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+                全選（依序 1~12）
+              </button>
+              <button type="button" onclick="clearSchoolDownloadFields()" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition">
+                清除重選
+              </button>
+            </div>
+          </div>
+
+          <!-- 12 項可點選欄位按鈕區 -->
+          <div id="school-dl-fields-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+
+          <!-- 即時欄位順序預覽列 -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="text-[11px] font-bold text-slate-600 mb-1.5">📑 目前 Excel 欄位輸出順序預覽（點擊已選標籤可移除）：</div>
+            <div id="school-dl-order-preview" class="flex flex-wrap items-center gap-1.5 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- 2. 呈現方式（是否需要資料保護，提供資料部分遮罩，如：姓名、手機號碼） -->
+        <div class="space-y-2.5">
+          <label class="text-sm font-bold text-slate-900 block">2. 呈現方式（是否需要資料保護，提供資料部分遮罩，如：姓名、手機號碼）</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="cursor-pointer rounded-2xl border-2 p-4 transition flex items-start gap-3" id="school-dl-mask-card-yes">
+              <input type="radio" name="school-dl-mask" value="yes" onchange="setSchoolDownloadMask('yes')" class="mt-1 accent-emerald-600" />
+              <div>
+                <div class="text-sm font-bold text-slate-900">選項 1「是」（啟用資料保護遮罩）</div>
+                <div class="text-xs text-slate-600 mt-0.5">學生姓名（王o明）、家長姓名（王0明）、手機號碼（0912***678）及生日將進行部分遮罩保護。</div>
+              </div>
+            </label>
+            <label class="cursor-pointer rounded-2xl border-2 p-4 transition flex items-start gap-3" id="school-dl-mask-card-no">
+              <input type="radio" name="school-dl-mask" value="no" onchange="setSchoolDownloadMask('no')" class="mt-1 accent-indigo-600" />
+              <div>
+                <div class="text-sm font-bold text-slate-900">選項 2「否」（完整原始資料）</div>
+                <div class="text-xs text-slate-600 mt-0.5">不進行資料遮罩，完整匯出所有選定欄位之原始資料。</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end gap-2 shrink-0">
+        <button type="button" onclick="closeSchoolDownloadModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+          取消
+        </button>
+        <button type="button" onclick="proceedToSchoolDownloadConfirm()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">
+          下一步：確認下載內容 →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       彈窗 9：各校查詢專區「下載清冊」內容最終確認框
+       ===================================================================== -->
+  <div id="school-download-confirm-modal" onclick="if (event.target === this) closeSchoolDownloadConfirmModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-indigo-200 animate-fade-up">
+      <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl shrink-0">
+            📋
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">請確認清冊下載設定內容</h3>
+            <p class="text-xs text-slate-500 mt-0.5">確認無誤後即可立即產生並下載 Excel 檔案</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeSchoolDownloadConfirmModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <div id="school-dl-confirm-summary" class="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-3 text-slate-700"></div>
+
+      <div class="mt-5 pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end gap-2">
+        <button type="button" onclick="backToSchoolDownloadOptions()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+          ← 返回修改選項
+        </button>
+        <button type="button" onclick="executeSchoolCustomDownload()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
+          ✅ 確認無誤，立即下載 Excel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // =========================================================================
     // 1. 系統核心常數與全域狀態
@@ -1796,7 +1873,13 @@
     const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGO2IvZ_TTMGSBE8YIyB5SnlSATAosFIxjwQo284mE11vfyPvqgZMpcU1eXHWBGjVfxA/exec';
     const ADMIN_PASSWORD = '12251226';
     const SHEET_OVERVIEW_PASSWORD = '2526';
+    // 管理員全校總覽代碼永久固定為 999999（000000 絕不可作為管理員代碼）
     const ADMIN_ALL_SCHOOLS_CODE = '999999';
+
+    function isAdminAllSchoolsCode(code) {
+      const c = String(code ?? '').trim();
+      return c === ADMIN_ALL_SCHOOLS_CODE;
+    }
 
     const ADMIN_DOWNLOAD_FIELDS = [
       { key: 'regStatus', label: '報名狀態' },
@@ -1811,6 +1894,21 @@
       { key: 'guardianId', label: '家長(監護人)身份證字號' },
       { key: 'phone', label: '家長(監護人)手機' },
       { key: 'meal', label: '餐別/餐點選擇' },
+      { key: 'failReason', label: '備註/原因' }
+    ];
+
+    const SCHOOL_DOWNLOAD_FIELDS = [
+      { key: 'regStatus', label: '報名狀態' },
+      { key: 'classDisplay', label: '學生班級' },
+      { key: 'seatDisplay', label: '學生座號' },
+      { key: 'studentDob', label: '學生生日' },
+      { key: 'guardianName', label: '家長(監護人)姓名' },
+      { key: 'phone', label: '家長(監護人)手機' },
+      { key: 'meal', label: '餐別/餐點選擇' },
+      { key: 'd1CheckedIn', label: '12/25報到狀態' },
+      { key: 'd1MealPicked', label: '12/25領餐狀態' },
+      { key: 'd2CheckedIn', label: '12/26報到狀態' },
+      { key: 'd2MealPicked', label: '12/26領餐狀態' },
       { key: 'failReason', label: '備註/原因' }
     ];
 
@@ -1834,14 +1932,18 @@
         mode: 'one_click',
         selectedFields: ['regStatus', 'schoolName', 'gradeLevel', 'classDisplay', 'seatDisplay', 'meal'],
         maskData: 'no'
+      },
+      schoolDownloadConfig: {
+        schoolCode: '',
+        selectedFields: ['regStatus', 'classDisplay', 'seatDisplay', 'guardianName', 'phone', 'meal'],
+        maskData: 'yes'
       }
     };
 
     // =========================================================================
-    // 2. 學校代碼對照與資料格式化工具（範例保持 000000，不對外公開列表）
+    // 2. 學校代碼對照與資料格式化工具（管理員全校代號：999999，不對外公開列表）
     // =========================================================================
     const CODE_TO_PRIMARY_SCHOOL = {
-      '000000': '測試國小',
       '034634': '五權國小',
       '034630': '菓林國小',
       '034627': '溪海國小',
@@ -2087,15 +2189,6 @@
       return NaN;
     }
 
-    /**
-     * 班級排序鍵解析：
-     * 類別 1：1→20
-     * 類別 2：A→D
-     * 類別 3：甲→戊
-     * 類別 4：忠→愛
-     * 類別 5：其他文字班級
-     * 類別 99：未填寫具體班級（僅有年級）
-     */
     function parseClassSortKey(rawClass, gradeLevel) {
       let s = String(rawClass ?? '').trim();
       if (!s || s === gradeLevel) {
@@ -2178,8 +2271,8 @@
     }
 
     function compareStudentsBySchoolThenGradeClassSeat(a, b) {
-      const codeA = a.schoolCode || getSchoolCode(a.schoolName) || '999999';
-      const codeB = b.schoolCode || getSchoolCode(b.schoolName) || '999999';
+      const codeA = a.schoolCode || getSchoolCode(a.schoolName) || 'ZZZZZZ';
+      const codeB = b.schoolCode || getSchoolCode(b.schoolName) || 'ZZZZZZ';
       if (codeA !== codeB) return codeA.localeCompare(codeB);
 
       const schoolA = a.schoolName || '未填寫學校';
@@ -2205,8 +2298,8 @@
       const countB = appState.schoolStudentCounts[b.schoolName] || 9999;
       if (countA !== countB) return countA - countB;
 
-      const codeA = a.schoolCode || '999999';
-      const codeB = b.schoolCode || '999999';
+      const codeA = a.schoolCode || 'ZZZZZZ';
+      const codeB = b.schoolCode || 'ZZZZZZ';
       if (codeA !== codeB) return codeA.localeCompare(codeB);
 
       if (a.schoolName !== b.schoolName) {
@@ -2286,8 +2379,14 @@
       if (cell.includes('/')) {
         const segs = cell.split('/').map(s => s.trim()).filter(Boolean);
         schoolName = segs[0] || '';
-        if (!classPart && segs[1]) classPart = segs[1];
-        if (!seatPart && segs[2]) seatPart = segs[2];
+        if (segs.length >= 4) {
+          if (!rawGrade && segs[1]) rawGrade = segs[1];
+          if (!classPart && segs[2]) classPart = segs[2];
+          if (!seatPart && segs[3]) seatPart = segs[3];
+        } else {
+          if (!classPart && segs[1]) classPart = segs[1];
+          if (!seatPart && segs[2]) seatPart = segs[2];
+        }
       } else if (!classPart) {
         const m = cell.match(/^(.+?(?:國小|國中|小學|中學))\s*(.+)$/);
         if (m) {
@@ -2349,7 +2448,13 @@
         );
 
         const explicitCode = cleanOptionalField(getCell(cm.schoolCodeCol));
-        if (explicitCode && explicitCode !== ADMIN_ALL_SCHOOLS_CODE && schoolName && !CODE_TO_PRIMARY_SCHOOL[explicitCode]) {
+        if (
+          explicitCode &&
+          !isAdminAllSchoolsCode(explicitCode) &&
+          explicitCode !== '000000' &&
+          schoolName &&
+          !CODE_TO_PRIMARY_SCHOOL[explicitCode]
+        ) {
           CODE_TO_PRIMARY_SCHOOL[explicitCode] = schoolName;
         }
         const schoolCode = explicitCode || getSchoolCode(schoolName);
@@ -2520,7 +2625,10 @@
         return { ok: false, reason: 'NO_URL' };
       }
 
-      const combinedSchoolClassSeat = [rec.schoolName, rec.classDisplay, rec.seatDisplay].filter(Boolean).join('/');
+      const classForCombined = (rec.gradeLevel && rec.classDisplay && !rec.classDisplay.includes(rec.gradeLevel))
+        ? `${rec.gradeLevel} ${rec.classDisplay}`
+        : (rec.classDisplay || rec.gradeLevel || '');
+      const combinedSchoolClassSeat = [rec.schoolName, classForCombined, rec.seatDisplay].filter(Boolean).join('/');
       const cm = appState.colMap;
       const to1Based = (idx) => (typeof idx === 'number' && idx >= 0) ? idx + 1 : -1;
 
@@ -2719,110 +2827,6 @@
       showToast('✅ 已複製「自助報到」專屬連結！', 'success');
     }
 
-    const EXPERIMENT_TOPICS = {
-      bio_micro: {
-        badge: '🌿 生物・微觀生態觀察',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/25 border border-emerald-300/40 text-emerald-200 mb-2',
-        title: '🔍 拍攝水中小生物（如教科書般清晰）',
-        desc: '學習正確操作光學顯微鏡與載玻片製作技巧，在鏡頭下尋找草履蟲、水蚤、輪蟲等微觀水生生物，並用手機拍下如自然課本般清晰的微距影像！',
-        tag1: '🔬 光學顯微鏡實作',
-        tag2: '📸 微觀生物攝影紀錄'
-      },
-      bio_plant: {
-        badge: '🌿 生物・微觀生態觀察',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/25 border border-emerald-300/40 text-emerald-200 mb-2',
-        title: '🌱 水中植物探索',
-        desc: '透過培養皿與顯微觀察水蘊草等水生植物構造，親眼見證細胞內葉綠體隨細胞質流動的奇景，並探討光照對水中植物產生氧氣氣泡的影響。',
-        tag1: '🍃 細胞與葉綠體觀察',
-        tag2: '💧 水生植物生理探究'
-      },
-      phy_escape: {
-        badge: '🔮 物理・光學與邏輯解謎',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-purple-500/25 border border-purple-300/40 text-purple-200 mb-2',
-        title: '🗝️ 密室逃脫・理化綜合關卡',
-        desc: '結合力學、光學與化學線索的團隊解謎挑戰！學員必須分工合作解讀密碼鎖中的科學原理，完成層層理化機關驗證才能順利逃脫過關。',
-        tag1: '🧩 跨領域理化實戰',
-        tag2: '🤝 小隊合作邏輯推理'
-      },
-      phy_light: {
-        badge: '🔮 物理・光學與邏輯解謎',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-purple-500/25 border border-purple-300/40 text-purple-200 mb-2',
-        title: '🌈 光與顏色',
-        desc: '透過三稜鏡折射實驗將白光分解成紅橙黃綠藍靛紫七彩光譜，探索光的折射、反射與三原色混光原理，揭開色彩背後的物理規律。',
-        tag1: '🔺 三稜鏡色散實驗',
-        tag2: '✨ 光譜與色彩科學'
-      },
-      chem1_h2: {
-        badge: '🧪 化學 1・氣體製備與檢驗',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-sky-500/25 border border-sky-300/40 text-sky-200 mb-2',
-        title: '🫧 氫氣製備與性質檢驗',
-        desc: '親手組裝錐形瓶與導氣管裝置，透過金屬與酸液反應產生氫氣並運用排水集氣法收集，實際觀察氫氣比空氣輕的特性與點火爆鳴聲，建立安全的實驗室氣體操作觀念。',
-        tag1: '🔬 動手組裝玻璃導管',
-        tag2: '💡 科學探究與安全檢驗'
-      },
-      chem1_co2: {
-        badge: '🧪 化學 1・氣體製備與檢驗',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-sky-500/25 border border-sky-300/40 text-sky-200 mb-2',
-        title: '💨 二氧化碳製備與性質檢驗',
-        desc: '利用大理石與稀鹽酸製備二氧化碳氣體，透過澄清石灰水變混濁、線香熄滅及酸鹼指示劑變色等實驗，全面驗證二氧化碳的密度與化學性質。',
-        tag1: '⚗️ 氣體收集與性質驗證',
-        tag2: '🌍 溫室氣體分子認識'
-      },
-      chem2_magdeburg: {
-        badge: '🔥 化學 2・大氣・藍印・奈米',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-500/25 border border-amber-300/40 text-amber-200 mb-2',
-        title: '🌐 馬德堡半球（大氣壓力）',
-        desc: '重現 17 世紀經典馬德堡半球實驗！當半球內部空氣被抽出形成近真空狀態，外部無所不在的大氣壓力將緊緊壓住半球，體驗看不見卻無比強大的空氣力量。',
-        tag1: '💪 經典大氣壓力挑戰',
-        tag2: '🌬️ 真空與氣壓差原理'
-      },
-      chem2_cyanotype: {
-        badge: '🔥 化學 2・大氣・藍印・奈米',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-500/25 border border-amber-300/40 text-amber-200 mb-2',
-        title: '🌿 Cyanotype 藍印術實驗',
-        desc: '結合光化學與藝術創作！調配檸檬酸鐵銨與鐵氰化鉀感光液塗佈於紙張，放上植物葉片經過紫外線曝光與水洗顯影，製作專屬的普魯士藍植物藍曬作品。',
-        tag1: '☀️ 光化學氧化還原反應',
-        tag2: '🖼️ 獨一無二藍曬藝術品'
-      },
-      chem2_chromato: {
-        badge: '🔥 化學 2・大氣・藍印・奈米',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-500/25 border border-amber-300/40 text-amber-200 mb-2',
-        title: '🎨 墨水的秘密（色層分析）',
-        desc: '黑色簽字筆其實藏著五彩繽紛的色素！運用濾紙色層分析法（Paper Chromatography），觀察不同色素分子隨展開液移動速率的差異，分離並破解墨水配方。',
-        tag1: '🧪 濾紙層析分離技術',
-        tag2: '🔎 鑑識科學色素偵探'
-      },
-      chem2_c60: {
-        badge: '🔥 化學 2・大氣・藍印・奈米',
-        badgeClass: 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-500/25 border border-amber-300/40 text-amber-200 mb-2',
-        title: '⚽ 碳60模型製作',
-        desc: '認識獲得諾貝爾化學獎的奈米碳球（巴克明斯特富勒烯 C60）！親手將五邊形與六邊形碳鍵結組裝成對稱的足球烯立體分子模型，理解微觀結構如何決定材料特性。',
-        tag1: '🧬 奈米碳球立體結構',
-        tag2: '🛠️ 動手拼裝 C60 分子'
-      }
-    };
-
-    function openExperimentModal(topicKey) {
-      const item = EXPERIMENT_TOPICS[topicKey];
-      const modal = document.getElementById('experiment-detail-modal');
-      if (!item || !modal) return;
-      document.getElementById('exp-modal-badge').className = item.badgeClass;
-      document.getElementById('exp-modal-badge').textContent = item.badge;
-      document.getElementById('exp-modal-title').textContent = item.title;
-      document.getElementById('exp-modal-desc').textContent = item.desc;
-      document.getElementById('exp-modal-tag1').textContent = item.tag1;
-      document.getElementById('exp-modal-tag2').textContent = item.tag2;
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function closeExperimentModal() {
-      const modal = document.getElementById('experiment-detail-modal');
-      if (!modal) return;
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
     function resetPosterMode() {
       const wrapper = document.getElementById('uploaded-poster-wrapper');
       const stage = document.getElementById('svg-poster-stage');
@@ -2995,8 +2999,8 @@
         if (r.schoolName) schoolSet.add(r.schoolName);
       });
       const schools = Array.from(schoolSet).sort((a, b) => {
-        const ca = getSchoolCode(a) || '999999';
-        const cb = getSchoolCode(b) || '999999';
+        const ca = getSchoolCode(a) || 'ZZZZZZ';
+        const cb = getSchoolCode(b) || 'ZZZZZZ';
         return ca !== cb ? ca.localeCompare(cb) : a.localeCompare(b, 'zh-Hant');
       });
 
@@ -3190,8 +3194,8 @@
       if (!resultBox) return;
       resultBox.classList.remove('hidden');
 
-      // 管理員專用代碼：999999（顯示全體報名清單並提供「下載清單」功能選單）
-      if (code === ADMIN_ALL_SCHOOLS_CODE) {
+      // 管理員專用代號：999999（可檢視、修正與下載全部學校的全部資料；000000 絕不可作為管理員代碼）
+      if (isAdminAllSchoolsCode(code)) {
         const allRecords = [...appState.records].sort(compareStudentsBySchoolThenGradeClassSeat);
         const okCount = allRecords.filter(r => r.regStatus === '成功').length;
         const pendingCount = allRecords.filter(r => r.regStatus === '審核中').length;
@@ -3204,8 +3208,8 @@
             <div class="p-5 rounded-2xl bg-slate-900 text-white border border-slate-700 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 shadow-md">
               <div>
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-mono font-extrabold">${escapeHtml(code)}</span>
-                  <h3 class="text-lg font-bold text-white">全體報名總清冊（管理員專用）</h3>
+                  <span class="px-2.5 py-0.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-mono font-extrabold">${escapeHtml(ADMIN_ALL_SCHOOLS_CODE)}</span>
+                  <h3 class="text-lg font-bold text-white">全體報名總清冊（管理員專用・全部資料）</h3>
                   <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-sky-200 text-xs font-semibold">共 ${schoolCount} 所學校</span>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-slate-200">
@@ -3229,47 +3233,59 @@
             </div>
 
             <div class="overflow-x-auto rounded-2xl border border-slate-200">
-              <table class="min-w-full divide-y divide-slate-200 text-sm">
-                <thead class="bg-slate-50 text-slate-600 text-xs font-semibold whitespace-nowrap">
+              <table class="min-w-full divide-y divide-slate-200 text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold whitespace-nowrap">
                   <tr>
-                    <th class="px-4 py-3 text-left">序</th>
-                    <th class="px-4 py-3 text-left">報名狀態</th>
-                    <th class="px-4 py-3 text-left">就讀學校</th>
-                    <th class="px-4 py-3 text-left">年級／班級／座號</th>
-                    <th class="px-4 py-3 text-left">學生姓名</th>
-                    <th class="px-4 py-3 text-left">餐別/餐食選擇</th>
-                    <th class="px-4 py-3 text-left">家長(監護人)姓名</th>
-                    <th class="px-4 py-3 text-left">家長(監護人)手機</th>
-                    <th class="px-4 py-3 text-left">兩日報到進度</th>
-                    <th class="px-4 py-3 text-right">操作</th>
+                    <th class="px-3 py-3 text-left">序</th>
+                    <th class="px-3 py-3 text-left">報名狀態</th>
+                    <th class="px-3 py-3 text-left">就讀學校</th>
+                    <th class="px-3 py-3 text-left">年級</th>
+                    <th class="px-3 py-3 text-left">班級</th>
+                    <th class="px-3 py-3 text-left">座號</th>
+                    <th class="px-3 py-3 text-left">學生姓名</th>
+                    <th class="px-3 py-3 text-left">學生生日</th>
+                    <th class="px-3 py-3 text-left">學生身份證字號</th>
+                    <th class="px-3 py-3 text-left">餐別/餐食選擇</th>
+                    <th class="px-3 py-3 text-left">家長(監護人)姓名</th>
+                    <th class="px-3 py-3 text-left">家長(監護人)生日</th>
+                    <th class="px-3 py-3 text-left">家長(監護人)身份證字號</th>
+                    <th class="px-3 py-3 text-left">家長(監護人)手機</th>
+                    <th class="px-3 py-3 text-left">兩日報到進度</th>
+                    <th class="px-3 py-3 text-right">操作</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-white">
+                <tbody class="divide-y divide-slate-100 bg-white whitespace-nowrap">
                   ${allRecords.length === 0
-                    ? `<tr><td colspan="10" class="px-4 py-8 text-center text-xs text-slate-500">目前尚無任何報名資料。</td></tr>`
+                    ? `<tr><td colspan="16" class="px-4 py-8 text-center text-xs text-slate-500">目前尚無任何報名資料。</td></tr>`
                     : allRecords.map((r, i) => `
                       <tr class="hover:bg-slate-50">
-                        <td class="px-4 py-3 text-xs text-slate-500">${i + 1}</td>
-                        <td class="px-4 py-3 whitespace-nowrap">
+                        <td class="px-3 py-3 text-slate-500">${i + 1}</td>
+                        <td class="px-3 py-3">
                           ${getRegStatusBadgeHtml(r.regStatus)}
                           ${r.failReason ? `<div class="text-[11px] text-rose-600 mt-1">${escapeHtml(r.failReason)}</div>` : ''}
                         </td>
-                        <td class="px-4 py-3 text-xs font-bold text-indigo-900 whitespace-nowrap">${escapeHtml(r.schoolName || '未填寫學校')}</td>
-                        <td class="px-4 py-3 text-xs text-slate-700 whitespace-nowrap">${escapeHtml(formatGradeClassSeat(r, false))}</td>
-                        <td class="px-4 py-3 font-bold text-slate-900 whitespace-nowrap">${escapeHtml(r.studentName)}</td>
-                        <td class="px-4 py-3 text-xs font-semibold whitespace-nowrap ${r.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${r.meal === '素' ? '🥬 素食' : '🍗 葷食'}</td>
-                        <td class="px-4 py-3 text-xs text-slate-700 whitespace-nowrap">${escapeHtml(r.guardianName || '')}</td>
-                        <td class="px-4 py-3 text-xs font-mono text-slate-700 whitespace-nowrap">${escapeHtml(r.phone || '')}</td>
-                        <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
+                        <td class="px-3 py-3 font-bold text-indigo-900">${escapeHtml(r.schoolName || '未填寫學校')}</td>
+                        <td class="px-3 py-3 text-slate-700">${escapeHtml(r.gradeLevel || '')}</td>
+                        <td class="px-3 py-3 text-slate-700">${escapeHtml(r.classDisplay || '')}</td>
+                        <td class="px-3 py-3 text-slate-700">${escapeHtml(r.seatDisplay || '')}</td>
+                        <td class="px-3 py-3 font-bold text-slate-900">${escapeHtml(r.studentName)}</td>
+                        <td class="px-3 py-3 text-slate-600">${escapeHtml(r.studentDob || '')}</td>
+                        <td class="px-3 py-3 font-mono text-slate-600">${escapeHtml(r.studentId || '')}</td>
+                        <td class="px-3 py-3 font-semibold ${r.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${r.meal === '素' ? '🥬 素食' : '🍗 葷食'}</td>
+                        <td class="px-3 py-3 text-slate-700">${escapeHtml(r.guardianName || '')}</td>
+                        <td class="px-3 py-3 text-slate-600">${escapeHtml(r.guardianDob || '')}</td>
+                        <td class="px-3 py-3 font-mono text-slate-600">${escapeHtml(r.guardianId || '')}</td>
+                        <td class="px-3 py-3 font-mono text-slate-700">${escapeHtml(r.phone || '')}</td>
+                        <td class="px-3 py-3 text-slate-600">
                           <div>12/25：${r.d1CheckedIn ? `✅ (${r.d1CheckinTime || '已到'})` : '⏳ 未到'}</div>
                           <div>12/26：${r.d2CheckedIn ? `✅ (${r.d2CheckinTime || '已到'})` : '⏳ 未到'}</div>
                         </td>
-                        <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                          <button type="button" onclick="openDataCorrectionModal('${r.id}', 'school')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition">
+                        <td class="px-3 py-3 text-right space-x-1">
+                          <button type="button" onclick="openDataCorrectionModal('${r.id}', 'admin_school')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold transition">
                             ✏️ 修正資料
                           </button>
                           ${r.regStatus !== '🚫 取消報名' ? `
-                            <button type="button" onclick="openCancelRegistrationModal('${r.id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition">
+                            <button type="button" onclick="openCancelRegistrationModal('${r.id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold transition">
                               🚫 取消報名
                             </button>
                           ` : ''}
@@ -3290,7 +3306,7 @@
         resultBox.innerHTML = `
           <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
             <div class="font-bold text-sm">❌ 查無此學校代碼（${escapeHtml(code)}）</div>
-            <p class="text-xs mt-1">請確認您輸入的是教育部國教署 6 碼學校代碼（例如：000000）。</p>
+            <p class="text-xs mt-1">請確認您輸入的是教育部國教署 6 碼學校代碼。</p>
           </div>
         `;
         return;
@@ -3305,6 +3321,7 @@
       const failCount = schoolRecords.filter(r => r.regStatus === '失敗').length;
       const cancelledCount = schoolRecords.filter(r => r.regStatus === '🚫 取消報名').length;
 
+      // 其他學校代號：畫面顯示欄位、可修正欄位皆與「下載清冊」提供之資料一致
       resultBox.innerHTML = `
         <div class="space-y-4 animate-fade-up">
           <div class="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -3322,53 +3339,57 @@
               </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" onclick="downloadSchoolExcel('${escapeHtml(code)}', 'masked')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
-                <span>🛡️</span>
-                <span>下載 Excel（姓名保護版）</span>
-              </button>
-              <button type="button" onclick="downloadSchoolExcel('${escapeHtml(code)}', 'full')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
-                <span>📊</span>
-                <span>下載 Excel（完整版）</span>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <button type="button" onclick="openSchoolDownloadModal('${escapeHtml(code)}')" class="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-1.5">
+                <span>📥</span>
+                <span>下載清冊</span>
               </button>
             </div>
           </div>
 
           <div class="overflow-x-auto rounded-2xl border border-slate-200">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
-              <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
+              <thead class="bg-slate-50 text-slate-600 text-xs font-semibold whitespace-nowrap">
                 <tr>
                   <th class="px-4 py-3 text-left">序</th>
                   <th class="px-4 py-3 text-left">報名狀態</th>
+                  <th class="px-4 py-3 text-left">就讀學校</th>
+                  <th class="px-4 py-3 text-left">年級</th>
+                  <th class="px-4 py-3 text-left">班級</th>
+                  <th class="px-4 py-3 text-left">座號</th>
                   <th class="px-4 py-3 text-left">學生姓名</th>
-                  <th class="px-4 py-3 text-left">年級／班級／座號</th>
+                  <th class="px-4 py-3 text-left">學生生日</th>
                   <th class="px-4 py-3 text-left">餐別/餐食選擇</th>
                   <th class="px-4 py-3 text-left">家長(監護人)姓名</th>
                   <th class="px-4 py-3 text-left">家長(監護人)手機</th>
-                  <th class="px-4 py-3 text-left">兩日報到進度</th>
+                  <th class="px-4 py-3 text-left">兩日報到與領餐狀態</th>
                   <th class="px-4 py-3 text-right">操作</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100 bg-white">
+              <tbody class="divide-y divide-slate-100 bg-white whitespace-nowrap">
                 ${schoolRecords.length === 0
-                  ? `<tr><td colspan="9" class="px-4 py-8 text-center text-xs text-slate-500">目前尚無 ${escapeHtml(primarySchoolName)} 的報名資料。</td></tr>`
+                  ? `<tr><td colspan="13" class="px-4 py-8 text-center text-xs text-slate-500">目前尚無 ${escapeHtml(primarySchoolName)} 的報名資料。</td></tr>`
                   : schoolRecords.map((r, i) => `
                     <tr class="hover:bg-slate-50">
                       <td class="px-4 py-3 text-xs text-slate-500">${i + 1}</td>
                       <td class="px-4 py-3">
                         ${getRegStatusBadgeHtml(r.regStatus)}
-                        ${r.failReason ? `<div class="text-[11px] text-rose-600 mt-1">${escapeHtml(r.failReason)}</div>` : ''}
+                        ${r.failReason ? `<div class="text-[11px] text-rose-600 mt-1 whitespace-normal max-w-[180px]">${escapeHtml(r.failReason)}</div>` : ''}
                       </td>
-                      <td class="px-4 py-3 font-bold text-slate-900">${escapeHtml(maskName(r.studentName))}</td>
-                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(formatGradeClassSeat(r, false))}</td>
+                      <td class="px-4 py-3 text-xs font-semibold text-slate-800">${escapeHtml(r.schoolName)}</td>
+                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(r.gradeLevel || '')}</td>
+                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(r.classDisplay || '')}</td>
+                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(r.seatDisplay || '')}</td>
+                      <td class="px-4 py-3 font-bold text-slate-900">${escapeHtml(r.studentName)}</td>
+                      <td class="px-4 py-3 text-xs text-slate-600">${escapeHtml(r.studentDob || '')}</td>
                       <td class="px-4 py-3 text-xs font-semibold ${r.meal === '素' ? 'text-emerald-700' : 'text-orange-700'}">${r.meal === '素' ? '🥬 素食' : '🍗 葷食'}</td>
-                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(maskNameZero(r.guardianName))}</td>
+                      <td class="px-4 py-3 text-xs text-slate-700">${escapeHtml(r.guardianName || '')}</td>
                       <td class="px-4 py-3 text-xs font-mono text-slate-700">${escapeHtml(r.phone || '')}</td>
                       <td class="px-4 py-3 text-xs text-slate-600">
-                        <div>12/25：${r.d1CheckedIn ? `✅ (${r.d1CheckinTime || '已到'})` : '⏳ 未到'}</div>
-                        <div>12/26：${r.d2CheckedIn ? `✅ (${r.d2CheckinTime || '已到'})` : '⏳ 未到'}</div>
+                        <div>12/25：${r.d1CheckedIn ? `✅ 已報到 (${r.d1CheckinTime || '現場'})` : '⏳ 未報到'}・${r.d1MealPicked ? '🍱 已領餐' : '未領餐'}</div>
+                        <div>12/26：${r.d2CheckedIn ? `✅ 已報到 (${r.d2CheckinTime || '現場'})` : '⏳ 未報到'}・${r.d2MealPicked ? '🍱 已領餐' : '未領餐'}</div>
                       </td>
-                      <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                      <td class="px-4 py-3 text-right space-x-1">
                         <button type="button" onclick="openDataCorrectionModal('${r.id}', 'school')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition">
                           ✏️ 修正資料
                         </button>
@@ -3448,7 +3469,7 @@
     }
 
     // =========================================================================
-    // 6-B. 管理員專用（代碼 999999）互動式下載清單設定與 Excel 匯出
+    // 6-B. 管理員專用（代號 999999）互動式下載清單設定與 Excel 匯出
     // =========================================================================
     function openAdminDownloadModal() {
       if (appState.records.length === 0) {
@@ -3502,7 +3523,6 @@
     function renderAdminDownloadOptionsUI() {
       const cfg = appState.adminDownloadConfig;
 
-      // 1. 單選模式卡片樣式
       ['one_click', 'by_school'].forEach(m => {
         const card = document.getElementById(`dl-mode-card-${m}`);
         if (!card) return;
@@ -3514,7 +3534,6 @@
           : 'cursor-pointer rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white p-4 transition flex items-start gap-3';
       });
 
-      // 2. 13 項多選欄位卡片（顯示點選順序編號）
       const grid = document.getElementById('admin-dl-fields-grid');
       if (grid) {
         grid.innerHTML = ADMIN_DOWNLOAD_FIELDS.map(f => {
@@ -3541,7 +3560,6 @@
         }).join('');
       }
 
-      // 即時順序預覽列
       const previewBox = document.getElementById('admin-dl-order-preview');
       if (previewBox) {
         const fixedChips = `
@@ -3566,7 +3584,6 @@
         }
       }
 
-      // 3. 資料保護遮罩單選卡片樣式
       ['yes', 'no'].forEach(val => {
         const card = document.getElementById(`dl-mask-card-${val}`);
         if (!card) return;
@@ -3720,7 +3737,6 @@
 
       closeAdminDownloadConfirmModal();
 
-      // 選項 1：一鍵下載（總表，按筆數排序）
       if (cfg.mode === 'one_click') {
         const sortedByEntryCount = allRecords.sort((a, b) => (a.rowNumber || 0) - (b.rowNumber || 0));
         const rowsData = sortedByEntryCount.map((r, idx) =>
@@ -3740,7 +3756,6 @@
         return;
       }
 
-      // 選項 2：分類下載（按校分類，每校內依 1.年級：低→高 2.班級：1→20，A→D，甲→戊，忠→愛 3.座號：小→大 排序）
       const schoolGroupsMap = new Map();
       allRecords.forEach(r => {
         const key = r.schoolName || '未填寫學校';
@@ -3751,8 +3766,8 @@
       });
 
       const sortedSchoolEntries = Array.from(schoolGroupsMap.entries()).sort(([schoolA], [schoolB]) => {
-        const codeA = getSchoolCode(schoolA) || '999999';
-        const codeB = getSchoolCode(schoolB) || '999999';
+        const codeA = getSchoolCode(schoolA) || 'ZZZZZZ';
+        const codeB = getSchoolCode(schoolB) || 'ZZZZZZ';
         if (codeA !== codeB) return codeA.localeCompare(codeB);
         return schoolA.localeCompare(schoolB, 'zh-Hant');
       });
@@ -3823,69 +3838,286 @@
       showToast(`✅ 已匯出「${csvFileName}」`, 'success');
     }
 
-    function downloadSchoolExcel(code, version) {
+    // =========================================================================
+    // 6-C. 各校查詢專區「下載清冊」互動式設定選單與 Excel 匯出
+    // =========================================================================
+    function getSchoolRecordsByCode(code) {
       const recordWithCode = appState.records.find(r => r.schoolCode === code);
       const primarySchoolName = CODE_TO_PRIMARY_SCHOOL[code] || (recordWithCode ? recordWithCode.schoolName : code);
       const records = appState.records
         .filter(r => r.schoolCode === code || normalizeSchoolName(r.schoolName) === normalizeSchoolName(primarySchoolName))
         .sort(compareByGradeClassSeat);
+      return { primarySchoolName, records };
+    }
 
+    function openSchoolDownloadModal(code) {
+      const { primarySchoolName, records } = getSchoolRecordsByCode(code);
+      if (records.length === 0) {
+        showToast(`目前「${primarySchoolName}」尚無報名資料可匯出`, 'warning');
+        return;
+      }
+
+      appState.schoolDownloadConfig.schoolCode = code;
+      const labelEl = document.getElementById('school-dl-modal-school-label');
+      if (labelEl) {
+        labelEl.textContent = `${primarySchoolName}（${code}）・共 ${records.length} 人`;
+      }
+
+      renderSchoolDownloadOptionsUI();
+      const modal = document.getElementById('school-download-options-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeSchoolDownloadModal() {
+      const modal = document.getElementById('school-download-options-modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setSchoolDownloadMask(maskVal) {
+      appState.schoolDownloadConfig.maskData = maskVal;
+      renderSchoolDownloadOptionsUI();
+    }
+
+    function toggleSchoolDownloadField(fieldKey) {
+      const list = appState.schoolDownloadConfig.selectedFields;
+      const idx = list.indexOf(fieldKey);
+      if (idx >= 0) {
+        list.splice(idx, 1);
+      } else {
+        list.push(fieldKey);
+      }
+      renderSchoolDownloadOptionsUI();
+    }
+
+    function selectAllSchoolDownloadFields() {
+      appState.schoolDownloadConfig.selectedFields = SCHOOL_DOWNLOAD_FIELDS.map(f => f.key);
+      renderSchoolDownloadOptionsUI();
+    }
+
+    function clearSchoolDownloadFields() {
+      appState.schoolDownloadConfig.selectedFields = [];
+      renderSchoolDownloadOptionsUI();
+    }
+
+    function renderSchoolDownloadOptionsUI() {
+      const cfg = appState.schoolDownloadConfig;
+
+      const grid = document.getElementById('school-dl-fields-grid');
+      if (grid) {
+        grid.innerHTML = SCHOOL_DOWNLOAD_FIELDS.map(f => {
+          const orderIdx = cfg.selectedFields.indexOf(f.key);
+          const isSelected = orderIdx >= 0;
+          return `
+            <button
+              type="button"
+              onclick="toggleSchoolDownloadField('${f.key}')"
+              class="text-left px-3.5 py-2.5 rounded-xl border-2 transition flex items-center justify-between gap-2 ${
+                isSelected
+                  ? 'border-indigo-600 bg-indigo-50 text-indigo-950 font-bold shadow-2xs'
+                  : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700 font-medium'
+              }"
+            >
+              <span class="text-xs truncate">${escapeHtml(f.label)}</span>
+              ${
+                isSelected
+                  ? `<span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">${orderIdx + 1}</span>`
+                  : `<span class="w-5 h-5 rounded-full border border-slate-300 text-transparent text-[11px] flex items-center justify-center shrink-0">✓</span>`
+              }
+            </button>
+          `;
+        }).join('');
+      }
+
+      const previewBox = document.getElementById('school-dl-order-preview');
+      if (previewBox) {
+        const fixedChips = `
+          <span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-bold">序號（固定）</span>
+          <span class="text-slate-400">→</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-bold">學生年級（固定）</span>
+          <span class="text-slate-400">→</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-bold">學生姓名（固定）</span>
+        `;
+        if (cfg.selectedFields.length === 0) {
+          previewBox.innerHTML = `${fixedChips} <span class="text-rose-600 font-semibold ml-1">（請點選上方至少一項下載內容）</span>`;
+        } else {
+          const fieldChips = cfg.selectedFields.map((key, idx) => {
+            const meta = SCHOOL_DOWNLOAD_FIELDS.find(item => item.key === key);
+            const label = meta ? meta.label : key;
+            return `
+              <span class="text-slate-400">→</span>
+              <button type="button" onclick="toggleSchoolDownloadField('${key}')" title="點擊移除此欄位" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-rose-600 text-white font-semibold transition">
+                ${idx + 1}. ${escapeHtml(label)} ✕
+              </button>
+            `;
+          }).join(' ');
+          previewBox.innerHTML = `${fixedChips} ${fieldChips}`;
+        }
+      }
+
+      ['yes', 'no'].forEach(val => {
+        const card = document.getElementById(`school-dl-mask-card-${val}`);
+        if (!card) return;
+        const radio = card.querySelector('input[type="radio"]');
+        const isSelected = cfg.maskData === val;
+        if (radio) radio.checked = isSelected;
+        card.className = isSelected
+          ? (val === 'yes'
+              ? 'cursor-pointer rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 p-4 transition flex items-start gap-3 shadow-xs'
+              : 'cursor-pointer rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 p-4 transition flex items-start gap-3 shadow-xs')
+          : 'cursor-pointer rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white p-4 transition flex items-start gap-3';
+      });
+    }
+
+    function proceedToSchoolDownloadConfirm() {
+      const cfg = appState.schoolDownloadConfig;
+      if (!cfg.selectedFields || cfg.selectedFields.length === 0) {
+        showToast('⚠️ 請在「1. 下載內容」中至少選擇一項要匯出的資料欄位！', 'warning');
+        return;
+      }
+
+      const { primarySchoolName, records } = getSchoolRecordsByCode(cfg.schoolCode);
+
+      const maskText = cfg.maskData === 'yes'
+        ? '是（已啟用資料保護部分遮罩：姓名、手機號碼及生日遮罩）'
+        : '否（不遮罩，匯出完整原始資料）';
+
+      const orderedLabels = ['序號（固定）', '學生年級（固定）', '學生姓名（固定）'].concat(
+        cfg.selectedFields.map((key, idx) => {
+          const meta = SCHOOL_DOWNLOAD_FIELDS.find(f => f.key === key);
+          return `${idx + 1}. ${meta ? meta.label : key}`;
+        })
+      );
+
+      const summaryEl = document.getElementById('school-dl-confirm-summary');
+      if (summaryEl) {
+        summaryEl.innerHTML = `
+          <div class="space-y-1">
+            <div class="text-[11px] font-bold text-slate-500">匯出學校與排序順序</div>
+            <div class="font-bold text-indigo-900 text-sm">${escapeHtml(primarySchoolName)}（${escapeHtml(cfg.schoolCode)}）</div>
+            <div class="text-[11px] text-slate-600">排序：1.年級（低→高） → 2.班級（1→20，A→D，甲→戊，忠→愛） → 3.座號（小→大）</div>
+          </div>
+          <div class="space-y-1 pt-2 border-t border-slate-200">
+            <div class="text-[11px] font-bold text-slate-500">1. 下載內容與欄位順序（共 ${orderedLabels.length} 欄）</div>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${orderedLabels.map(lbl => `<span class="px-2 py-0.5 rounded-md bg-white border border-slate-300 text-slate-800 font-semibold">${escapeHtml(lbl)}</span>`).join('')}
+            </div>
+          </div>
+          <div class="space-y-1 pt-2 border-t border-slate-200">
+            <div class="text-[11px] font-bold text-slate-500">2. 呈現方式（資料保護遮罩）</div>
+            <div class="font-bold ${cfg.maskData === 'yes' ? 'text-emerald-700' : 'text-slate-900'}">${escapeHtml(maskText)}</div>
+          </div>
+          <div class="space-y-1 pt-2 border-t border-slate-200 flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-500">預計匯出清冊人數</span>
+            <span class="font-extrabold text-slate-900">${records.length} 人</span>
+          </div>
+        `;
+      }
+
+      closeSchoolDownloadModal();
+      const confirmModal = document.getElementById('school-download-confirm-modal');
+      confirmModal.classList.remove('hidden');
+      confirmModal.classList.add('flex');
+    }
+
+    function closeSchoolDownloadConfirmModal() {
+      const confirmModal = document.getElementById('school-download-confirm-modal');
+      if (!confirmModal) return;
+      confirmModal.classList.add('hidden');
+      confirmModal.classList.remove('flex');
+    }
+
+    function backToSchoolDownloadOptions() {
+      closeSchoolDownloadConfirmModal();
+      openSchoolDownloadModal(appState.schoolDownloadConfig.schoolCode);
+    }
+
+    function buildSchoolCustomExportRow(r, idx, selectedFields, isMasked) {
+      const rowObj = {
+        '序號': idx + 1,
+        '學生年級': r.gradeLevel || '',
+        '學生姓名': isMasked ? maskName(r.studentName) : r.studentName
+      };
+
+      selectedFields.forEach(key => {
+        switch (key) {
+          case 'regStatus':
+            rowObj['報名狀態'] = getStatusDisplayText(r.regStatus);
+            break;
+          case 'classDisplay':
+            rowObj['學生班級'] = r.classDisplay || r.gradeLevel || '';
+            break;
+          case 'seatDisplay':
+            rowObj['學生座號'] = r.seatDisplay || '';
+            break;
+          case 'studentDob':
+            rowObj['學生生日'] = isMasked ? maskDateStr(r.studentDob) : (r.studentDob || '');
+            break;
+          case 'guardianName':
+            rowObj['家長(監護人)姓名'] = isMasked ? maskNameZero(r.guardianName) : (r.guardianName || '');
+            break;
+          case 'phone':
+            rowObj['家長(監護人)手機'] = isMasked ? maskPhoneStr(r.phone) : (r.phone || '');
+            break;
+          case 'meal':
+            rowObj['餐別/餐點選擇'] = r.meal === '素' ? '素食' : '葷食';
+            break;
+          case 'd1CheckedIn':
+            rowObj['12/25報到狀態'] = r.d1CheckedIn ? `已報到 (${r.d1CheckinTime || '現場'})` : '未報到';
+            break;
+          case 'd1MealPicked':
+            rowObj['12/25領餐狀態'] = r.d1MealPicked ? `已領餐 (${r.d1MealTime || '現場'})` : '未領餐';
+            break;
+          case 'd2CheckedIn':
+            rowObj['12/26報到狀態'] = r.d2CheckedIn ? `已報到 (${r.d2CheckinTime || '現場'})` : '未報到';
+            break;
+          case 'd2MealPicked':
+            rowObj['12/26領餐狀態'] = r.d2MealPicked ? `已領餐 (${r.d2MealTime || '現場'})` : '未領餐';
+            break;
+          case 'failReason':
+            rowObj['備註/原因'] = r.failReason || '';
+            break;
+          default:
+            break;
+        }
+      });
+
+      return rowObj;
+    }
+
+    function executeSchoolCustomDownload() {
+      const cfg = appState.schoolDownloadConfig;
+      const { primarySchoolName, records } = getSchoolRecordsByCode(cfg.schoolCode);
       if (records.length === 0) {
         showToast('目前該校無報名資料可匯出', 'warning');
         return;
       }
 
-      const isMasked = version === 'masked';
-      const rowsData = records.map((r, idx) => {
-        const statusText = getStatusDisplayText(r.regStatus);
-        if (isMasked) {
-          return {
-            '序號': idx + 1,
-            '報名狀態': statusText,
-            '就讀學校': r.schoolName,
-            '年級': r.gradeLevel,
-            '班級': r.classDisplay,
-            '座號': r.seatDisplay || '',
-            '學生姓名（保護版）': maskName(r.studentName),
-            '餐別/餐食選擇': r.meal === '素' ? '素食' : '葷食',
-            '12/25報到狀態': r.d1CheckedIn ? `已報到 (${r.d1CheckinTime || ''})` : '未報到',
-            '12/26報到狀態': r.d2CheckedIn ? `已報到 (${r.d2CheckinTime || ''})` : '未報到',
-            '備註/失敗原因': r.failReason || ''
-          };
-        }
-        return {
-          '序號': idx + 1,
-          '報名狀態': statusText,
-          '就讀學校': r.schoolName,
-          '年級': r.gradeLevel,
-          '班級': r.classDisplay,
-          '座號': r.seatDisplay || '',
-          '學生姓名': r.studentName,
-          '餐別/餐食選擇': r.meal === '素' ? '素食' : '葷食',
-          '家長(監護人)姓名': r.guardianName || '',
-          '家長(監護人)手機': r.phone || '',
-          '12/25報到狀態': r.d1CheckedIn ? `已報到 (${r.d1CheckinTime || ''})` : '未報到',
-          '12/26報到狀態': r.d2CheckedIn ? `已報到 (${r.d2CheckinTime || ''})` : '未報到',
-          '備註/失敗原因': r.failReason || ''
-        };
-      });
+      const isMasked = cfg.maskData === 'yes';
+      const fileLabel = isMasked ? '資料保護遮罩版' : '完整版';
+      const fileName = `${primarySchoolName}_科學實驗營隊清冊_${fileLabel}.xlsx`;
 
-      const fileLabel = isMasked ? '姓名保護版' : '完整版';
-      const fileName = `${primarySchoolName}_科學實驗營隊名冊_${fileLabel}.xlsx`;
+      closeSchoolDownloadConfirmModal();
+
+      const rowsData = records.map((r, idx) =>
+        buildSchoolCustomExportRow(r, idx, cfg.selectedFields, isMasked)
+      );
 
       if (window.XLSX) {
         const ws = XLSX.utils.json_to_sheet(rowsData);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, fileLabel);
+        XLSX.utils.book_append_sheet(wb, ws, primarySchoolName.slice(0, 31));
         XLSX.writeFile(wb, fileName);
-        showToast(`✅ 已下載「${fileName}」`, 'success');
+        showToast(`✅ 已下載「${fileName}」（共 ${rowsData.length} 筆）`, 'success');
       } else {
         exportRowsToCsvFallback(rowsData, fileName.replace(/\.xlsx$/, '.csv'));
       }
     }
 
     // =========================================================================
-    // 7. 資料修正彈窗（學生/家長、各校、管理員共用）
+    // 7. 資料修正彈窗（學生/家長、各校、管理員共用；一般學校顯示與下載清冊一致之欄位）
     // =========================================================================
     function openDataCorrectionModal(recordId, sourceMode) {
       const rec = appState.records.find(r => r.id === recordId);
@@ -3895,7 +4127,16 @@
       document.getElementById('corr-source-mode').value = sourceMode;
       document.getElementById('corr-student-name').value = rec.studentName;
       document.getElementById('corr-school-name').value = rec.schoolName;
-      document.getElementById('corr-class-input').value = rec.classDisplay || rec.gradeLevel || '';
+
+      const gradeSelect = document.getElementById('corr-grade-select');
+      if (gradeSelect) {
+        gradeSelect.value = Array.from(gradeSelect.options).some(o => o.value === rec.gradeLevel) ? rec.gradeLevel : '';
+      }
+
+      const classOnlyVal = (rec.classDisplay && rec.classDisplay !== rec.gradeLevel)
+        ? rec.classDisplay
+        : '';
+      document.getElementById('corr-class-input').value = classOnlyVal;
       document.getElementById('corr-seat-input').value = rec.seatDisplay;
       document.getElementById('corr-meal-select').value = rec.meal;
       document.getElementById('corr-guardian-name').value = rec.guardianName;
@@ -3904,6 +4145,12 @@
       document.getElementById('corr-student-dob').value = rec.studentDob;
       document.getElementById('corr-guardian-id').value = rec.guardianId;
       document.getElementById('corr-guardian-dob').value = rec.guardianDob;
+
+      // 一般學校代號查詢時，可修正欄位與可檢視/下載之清冊一致（包含學生生日，隱藏身分證字號與家長生日）
+      const sensitiveWrap = document.getElementById('corr-sensitive-fields');
+      if (sensitiveWrap) {
+        sensitiveWrap.classList.toggle('hidden', sourceMode === 'school');
+      }
 
       const modal = document.getElementById('data-correction-modal');
       modal.classList.remove('hidden');
@@ -3919,6 +4166,7 @@
     async function saveDataCorrection(e) {
       e.preventDefault();
       const id = document.getElementById('corr-record-id').value;
+      const sourceMode = document.getElementById('corr-source-mode').value;
       const rec = appState.records.find(r => r.id === id);
       if (!rec) return;
 
@@ -3926,18 +4174,23 @@
       rec.studentName = document.getElementById('corr-student-name').value.trim();
       rec.schoolName = normalizeSchoolName(document.getElementById('corr-school-name').value.trim());
       rec.schoolCode = getSchoolCode(rec.schoolName);
+
+      const selectedGrade = (document.getElementById('corr-grade-select')?.value || '').trim();
       const rawClass = cleanOptionalField(document.getElementById('corr-class-input').value);
-      rec.gradeLevel = inferGradeLevel(rec.schoolName, rawClass, '');
+      rec.gradeLevel = selectedGrade || inferGradeLevel(rec.schoolName, rawClass, '');
       rec.classDisplay = formatClassForSchoolRoster(rawClass, rec.gradeLevel);
       rec.seatDisplay = formatSeatForSchoolRoster(cleanOptionalField(document.getElementById('corr-seat-input').value));
       rec.meal = document.getElementById('corr-meal-select').value;
       rec.guardianName = cleanOptionalField(document.getElementById('corr-guardian-name').value);
       rec.phone = cleanOptionalField(document.getElementById('corr-phone-input').value);
       rec.phoneLast4 = getPhoneLast4(rec.phone);
-      rec.studentId = cleanOptionalField(document.getElementById('corr-student-id').value).toUpperCase();
       rec.studentDob = cleanOptionalField(document.getElementById('corr-student-dob').value);
-      rec.guardianId = cleanOptionalField(document.getElementById('corr-guardian-id').value).toUpperCase();
-      rec.guardianDob = cleanOptionalField(document.getElementById('corr-guardian-dob').value);
+
+      if (sourceMode !== 'school') {
+        rec.studentId = cleanOptionalField(document.getElementById('corr-student-id').value).toUpperCase();
+        rec.guardianId = cleanOptionalField(document.getElementById('corr-guardian-id').value).toUpperCase();
+        rec.guardianDob = cleanOptionalField(document.getElementById('corr-guardian-dob').value);
+      }
 
       closeDataCorrectionModal();
       populateSchoolDropdowns();
@@ -4798,6 +5051,14 @@ function doPost(e) {
         storedUrl = localStorage.getItem('ntnu_usr_apps_script_url') || '';
       } catch (e) {}
       appState.appsScriptUrl = storedUrl || DEFAULT_APPS_SCRIPT_URL;
+
+      document.querySelectorAll('#svg-poster-stage .exp-node').forEach(node => {
+        node.addEventListener('mouseenter', function () {
+          if (this.parentNode) {
+            this.parentNode.appendChild(this);
+          }
+        });
+      });
 
       const posterUpload = document.getElementById('poster-upload');
       if (posterUpload) {
